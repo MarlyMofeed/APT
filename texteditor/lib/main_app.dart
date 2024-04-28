@@ -14,7 +14,7 @@ class MainApp extends StatelessWidget {
           seedColor: const Color.fromRGBO(32, 63, 129, 1.0),
         ),
       ),
-      home: FileManagementPage(),
+      home: Login(),
     );
   }
 }
