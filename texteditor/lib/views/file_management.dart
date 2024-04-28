@@ -73,53 +73,48 @@ class _FileManagementPageState extends State<FileManagementPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      //       appBar: AppBar(
-      //         backgroundColor: Colors.white,
-      //   title: Row(
-      //     children: <Widget>[
-      //       Icon(Icons.file_copy), // replace with your desired icon
-      //       SizedBox(width: 10), // gives some horizontal space between the icon and the text
-      //       Text("File Management",
-      //         //style: Theme.of(context).textTheme.headlineLarge,
-      //         style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-      //       ),
-      //     ],
-      //   ),
-      //   elevation: 8,
-      //   actions: [
-      //     Padding(
-      //       padding: const EdgeInsets.all(8.0),
-      //       child: DecoratedBox(
-      //         decoration: BoxDecoration(
-      //           shape: BoxShape.circle,
-      //           border: Border.all(color: Colors.white),
-      //         ),
-      //         child: IconButton(
-      //           onPressed: () {
-      //             _boxLogin.clear();
-      //             _boxLogin.put("loginStatus", false);
-      //             Navigator.pushReplacement(
-      //               context,
-      //               MaterialPageRoute(
-      //                 builder: (context) {
-      //                   return const Login();
-      //                 },
-      //               ),
-      //             );
-      //           },
-      //           icon: const Icon(Icons.logout_rounded),
-      //         ),
-      //       ),
-      //     )
-      //   ],
-      // ),
-
+      appBar: AppBar(
+        //backgroundColor: Colors.white,
+        // title: Row(
+        //   children: <Widget>[
+        //     //Icon(Icons.file_copy), // replace with your desired icon
+        //     SizedBox(width:10), // gives some horizontal space between the icon and the text
+        //     Text(
+        //       "File Management",
+        //       //style: Theme.of(context).textTheme.headlineLarge,
+        //       style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+        //     ),
+        //   ],
+        // ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+              child: IconButton(
+                onPressed: () {
+                  _boxLogin.clear();
+                  _boxLogin.put("loginStatus", false);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const Login();
+                      },
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.logout_rounded),
+              ),
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           //crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 70.0, bottom: 50.0),
+              padding: const EdgeInsets.only(top: 50.0, bottom: 50.0),
               child: Text(
                 "File Management",
                 //style: Theme.of(context).textTheme.headlineLarge,
@@ -263,7 +258,6 @@ class _FileManagementPageState extends State<FileManagementPage> {
           ],
         ),
       ),
-
       floatingActionButton: Container(
         margin: EdgeInsets.only(bottom: 16.0),
         width: 300,
@@ -285,12 +279,12 @@ class _FileManagementPageState extends State<FileManagementPage> {
                             CrossAxisAlignment.start, // add this line
                         children: <Widget>[
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 13.0, top: 5),
+                            padding:
+                                const EdgeInsets.only(bottom: 13.0, top: 5),
                             child: Text(
                               'Enter the document name',
                               //style: Theme.of(context).textTheme.bodyMedium,
-                              style: TextStyle(
-                                  fontSize: 20),
+                              style: TextStyle(fontSize: 20),
                               textAlign: TextAlign.left,
                             ),
                           ),
