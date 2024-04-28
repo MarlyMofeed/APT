@@ -55,8 +55,8 @@ class _FileManagementPageState extends State<FileManagementPage> {
 
   bool isEditor = true;
 
-  List<Document> get ownedDocuments => [
-    Document(id: 1, name: 'Document 1', owner: _boxLogin.get("userName") ?? 'Default User', isOwnedByUser: true),
+  List<Document> ownedDocuments = [
+    Document(id: 1, name: 'Document 1', owner: 'User 1', isOwnedByUser: true),
     // Add more owned documents here
   ];
 
@@ -76,64 +76,80 @@ class _FileManagementPageState extends State<FileManagementPage> {
     print("Build method called");
 
     return Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.white,
-        title: Row(
-          children: <Widget>[
-            Icon(Icons.file_copy), // replace with your desired icon
-            SizedBox(width: 10), // gives some horizontal space between the icon and the text
-            Text("File Management",
-              //style: Theme.of(context).textTheme.headlineLarge,
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        elevation: 8,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white),
-              ),
-              child: IconButton(
-                onPressed: () {
-                  _boxLogin.clear();
-                  _boxLogin.put("loginStatus", false);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const Login();
-                      },
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.logout_rounded),
-              ),
-            ),
-          )
-        ],
-      ),
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      //       appBar: AppBar(
+      //         backgroundColor: Colors.white,
+      //   title: Row(
+      //     children: <Widget>[
+      //       Icon(Icons.file_copy), // replace with your desired icon
+      //       SizedBox(width: 10), // gives some horizontal space between the icon and the text
+      //       Text("File Management",
+      //         //style: Theme.of(context).textTheme.headlineLarge,
+      //         style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+      //       ),
+      //     ],
+      //   ),
+      //   elevation: 8,
+      //   actions: [
+      //     Padding(
+      //       padding: const EdgeInsets.all(8.0),
+      //       child: DecoratedBox(
+      //         decoration: BoxDecoration(
+      //           shape: BoxShape.circle,
+      //           border: Border.all(color: Colors.white),
+      //         ),
+      //         child: IconButton(
+      //           onPressed: () {
+      //             _boxLogin.clear();
+      //             _boxLogin.put("loginStatus", false);
+      //             Navigator.pushReplacement(
+      //               context,
+      //               MaterialPageRoute(
+      //                 builder: (context) {
+      //                   return const Login();
+      //                 },
+      //               ),
+      //             );
+      //           },
+      //           icon: const Icon(Icons.logout_rounded),
+      //         ),
+      //       ),
+      //     )
+      //   ],
+      // ),
 
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 20.0, top: 20.0),
+            padding: const EdgeInsets.only(top: 70.0),
+          child: Text("File Management",
+              //style: Theme.of(context).textTheme.headlineLarge,
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+      ),
+
+          Padding(
+            padding: const EdgeInsets.only(top: 70.0),
             child: Text('Owned Documents',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ),
           Padding(
-          padding: const EdgeInsets.only(left: 20.0),
+          padding: const EdgeInsets.fromLTRB(610, 30, 600, 30),
           child: ListView.builder(
             shrinkWrap: true,
             itemCount: ownedDocuments.length,
             itemBuilder: (context, index) {
               final document = ownedDocuments[index];
-              return ListTile(
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              child: ListTile(
                 title: Text(ownedDocuments[index].name),
                 //subtitle: Text('Owned by: ${ownedDocuments[index].owner}'),
                 onTap: () {
@@ -164,29 +180,38 @@ class _FileManagementPageState extends State<FileManagementPage> {
 
                   },
                 ),
+              ),
               );
             },
           ),
           ),
-          SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.only(left: 20.0), // adjust the value as needed
-            child: Text('Shared Documents',
+          //SizedBox(height: 2),
+          //Padding(
+            //padding: const EdgeInsets.only(left: 20.0), // adjust the value as needed
+            Text('Shared Documents',
               style: Theme.of(context).textTheme.headlineMedium,
               ),
-          ),
+          //),
           Padding(
-            padding: const EdgeInsets.only(left: 20.0), // adjust the value as needed
+            padding: const EdgeInsets.fromLTRB(610, 30, 600, 100), // adjust the value as needed
             child: ListView.builder(
             shrinkWrap: true,
             itemCount: sharedDocuments.length,
             itemBuilder: (context, index) {
               final document = sharedDocuments[index];
               //var isEditor;
-              return ListTile(
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              child: ListTile(
                 title: Text(document.name),
                 onTap: () {
-                  // Handle opening the document
+                  
+                  // TODO: Handle opening the document
+
                 },
                 trailing: PopupMenuButton<String>(
                   itemBuilder: (context) => isEditor ? [
@@ -204,12 +229,14 @@ class _FileManagementPageState extends State<FileManagementPage> {
                     // Handle selected option
                   },
                 ),
+              ),
               );
             },
           ),
           ),
         ],
       ),
+    ),
 
 
       floatingActionButton: FloatingActionButton.extended(
@@ -263,7 +290,7 @@ class _FileManagementPageState extends State<FileManagementPage> {
                               //   )); 
                               addDocument(Document(
                                   id: ownedDocuments.length + 1, 
-                                  name: 'New Document', 
+                                  name: _controller.text, 
                                   owner: 'Default User', 
                                   isOwnedByUser: true
                                 ));
@@ -292,8 +319,8 @@ class _FileManagementPageState extends State<FileManagementPage> {
     );
   }
   
-  @override
-    void setState(VoidCallback fn) {
-      super.setState(fn);
-    }
+  // @override
+  //   void setState(VoidCallback fn) {
+  //     super.setState(fn);
+  //   }
 }
