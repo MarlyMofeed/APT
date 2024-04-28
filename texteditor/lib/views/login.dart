@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:texteditor/views/file_management.dart';
 
 import 'home.dart';
 import 'signup.dart';
@@ -27,7 +28,7 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     if (_boxLogin.get("loginStatus") ?? false) {
-      return Home();
+      return FileManagementPage();
     }
 
     return Scaffold(
