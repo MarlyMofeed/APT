@@ -1,8 +1,6 @@
 package googledocsclone.example.googledocsclone.models;
-
-import java.util.List;
-
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
@@ -13,14 +11,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Documents {
 
     @Id
     private String id;
-    private String username;
-    private String password;
-    private String email;
-    private List<String> documentIds;
-    private List<String> sharedDocumentIds;
+    @Indexed(unique = true)
+    private String name;
+    private String content;
+    private String ownerId;
+    private String sharedWith;
+
     
 }
