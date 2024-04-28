@@ -3,6 +3,20 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'login.dart';
 
+class Document {
+  final String id;
+  final String name;
+  final String owner;
+  final bool isOwnedByUser; // Whether the document is owned by the user or shared by others
+
+  Document({
+    required this.id,
+    required this.name,
+    required this.owner,
+    required this.isOwnedByUser,
+  });
+}
+
 class Home extends StatelessWidget {
   Home({super.key});
 
@@ -12,7 +26,7 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Login App"),
+        title: const Text("File Management"),
         elevation: 0,
         actions: [
           Padding(
