@@ -53,7 +53,7 @@ public class AuthController {
         String username = body.get("username");
         String password = body.get("password");
         String email = body.get("email");
-
+        String role = "owner"; 
         // Check if username or email already exists
         if (userRepository.existsByUsername(username)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Username already exists"));

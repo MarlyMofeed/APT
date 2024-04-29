@@ -22,6 +22,7 @@ public class User {
     private String email;
     private List<String> documentIds;
     private List<String> sharedDocumentIds;
+    private String role;
 
     public String getId() {
         return id;
@@ -54,5 +55,26 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-    
+    public List<String> getDocumentIds() {
+        return documentIds;
+    }
+
+    public void setDocumentIds(List<String> documentIds) {
+        this.documentIds = documentIds;
+    }
+
+    public List<String> getSharedDocumentIds() {
+        return sharedDocumentIds;
+    }
+
+    public void setSharedDocumentIds(List<String> sharedDocumentIds) {
+        this.sharedDocumentIds = sharedDocumentIds;
+    }
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 }
