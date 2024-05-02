@@ -1,6 +1,7 @@
 package googledocsclone.example.googledocsclone.models;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -20,9 +21,11 @@ public class User {
     private String username;
     private String password;
     private String email;
-    private List<String> documentIds;
-    private List<String> sharedDocumentIds;
+    private List<String> documentIds= new ArrayList<>();
+    private List<String> sharedDocumentIds=new ArrayList<>();
     private String role;
+
+    
 
     public String getId() {
         return id;
