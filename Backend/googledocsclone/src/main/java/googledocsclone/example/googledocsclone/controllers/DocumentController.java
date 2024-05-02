@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,7 +39,7 @@ public class DocumentController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addDocument(@RequestHeader("Id") String userId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> addDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, String> body) {
         Documents document = new Documents();
         document.setName(body.get("documentName"));
         documentRepository.save(document);
@@ -66,7 +68,8 @@ public class DocumentController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<Map<String, Object>> deleteDocument(@RequestHeader("Id") String userId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> deleteDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, String> body) {
+        String documentId = body.get("id");
         String documentName = body.get("documentName");
         Map<String, Object> response = new HashMap<>();
         
@@ -79,7 +82,7 @@ public class DocumentController {
         User user = optionalUser.get();
     
         // Find the document by name and user ID
-        Documents document = documentRepository.findByNameAndOwnerId(documentName, userId);
+        Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
         if (document == null) {
             response.put("message", "Document not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
@@ -101,6 +104,77 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @PutMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, String> body) {
+        String documentId = body.get("id");
+        Map<String, Object> response = new HashMap<>();
+        
+        // Find the user
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            response.put("message", "User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        User user = optionalUser.get();
+
+        // Find the document by ID and user ID
+        Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
+        if (document == null) {
+            response.put("message", "Document not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        try {
+            // Update the document's name
+            String newName = body.get("documentName");
+            document.setName(newName);
+            documentRepository.save(document);
+
+            response.put("message", "Document updated successfully");
+            response.put("document", document);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Error updating document: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/get")
+    public ResponseEntity<Map<String, Object>> getDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, String> body) {
+        String documentId = body.get("id");
+        Map<String, Object> response = new HashMap<>();
+        
+        // Find the user
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            response.put("message", "User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        User user = optionalUser.get();
+
+        // Find the document by ID and user ID
+        Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
+        if (document == null) {
+            response.put("message", "Document not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        try {
+            // Return the document details
+            response.put("message", "Document retrieved successfully");
+            response.put("document", document);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Error retrieving document: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
 
 
 }
