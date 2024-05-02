@@ -1,0 +1,170 @@
+{
+	"info": {
+		"_postman_id": "69208533-04ee-41a4-99c1-f20451d0df70",
+		"name": "Auth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32069311"
+	},
+	"item": [
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"amira\",\r\n    \"password\": \"12345678\",\r\n    \"email\": \"amira@gmail.com\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/signup",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"signup"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "400 If Username is repeated",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"Soso\",\r\n    \"password\": \"12345678\",\r\n    \"email\": \"Soso@gmail.com\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/auth/signup",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Vary",
+							"value": "Origin"
+						},
+						{
+							"key": "Vary",
+							"value": "Access-Control-Request-Method"
+						},
+						{
+							"key": "Vary",
+							"value": "Access-Control-Request-Headers"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, max-age=0, must-revalidate"
+						},
+						{
+							"key": "Pragma",
+							"value": "no-cache"
+						},
+						{
+							"key": "Expires",
+							"value": "0"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 29 Apr 2024 19:15:17 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"message\": \"Username already exists\"\n}"
+				}
+			]
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"amira\",\r\n    \"password\": \"12345678\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
