@@ -172,7 +172,7 @@ public class DocumentController {
             response.put("message", "Error retrieving document: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-    }
+    }   
 
 
 

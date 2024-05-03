@@ -17,6 +17,16 @@ class _TextEditState extends State<TextEdit> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        appBar: AppBar(
+          actions: [
+            IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: Icon(Icons.save),
+            )
+          ],
+        ),
         body: Column(
           children: [
             Padding(
@@ -25,7 +35,7 @@ class _TextEditState extends State<TextEdit> {
                 configurations: QuillSimpleToolbarConfigurations(
                   controller: _controller,
                   sharedConfigurations: const QuillSharedConfigurations(
-                    locale: Locale('de'),
+                    locale: Locale('en'),
                   ),
                 ),
               ),
@@ -36,11 +46,25 @@ class _TextEditState extends State<TextEdit> {
                   controller: _controller,
                   readOnly: false,
                   sharedConfigurations: const QuillSharedConfigurations(
-                    locale: Locale('de'),
+                    locale: Locale('en'),
                   ),
                 ),
               ),
-            )
+            ),
+            Container(
+              width: 200,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () {},
+                child: const Text("Save"),
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
