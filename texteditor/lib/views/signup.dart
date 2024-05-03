@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:texteditor/views/file_management.dart';
+import '../controller/UserController.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -22,6 +24,35 @@ class _SignupState extends State<Signup> {
 
   final Box _boxAccounts = Hive.box("accounts");
   bool _obscurePassword = true;
+  Future<void> _handleSignup() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        print("YA NAAAAAAAAS");
+        print(_controllerUsername.text);
+        print(_controllerPassword.text);
+        print(_controllerEmail.text);
+
+        final response = await UserController.signup(
+          _controllerUsername.text,
+          _controllerPassword.text,
+          _controllerEmail.text,
+        );
+        print(response);
+        // Handle the response here. For example, you can store the user data in Hive.
+        _boxAccounts.put('user', response);
+        // Navigate to the next screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => FileManagementPage()),
+        );
+      } catch (e) {
+        // Show an error message if the signup failed
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to signup: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,31 +204,7 @@ class _SignupState extends State<Signup> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        _boxAccounts.put(
-                          _controllerUsername.text,
-                          _controllerConFirmPassword.text,
-                        );
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            width: 200,
-                            backgroundColor:
-                                Theme.of(context).colorScheme.secondary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                            content: const Text("Registered Successfully"),
-                          ),
-                        );
-
-                        _formKey.currentState?.reset();
-
-                        Navigator.pop(context);
-                      }
-                    },
+                    onPressed: _handleSignup,
                     child: const Text("Register"),
                   ),
                   Row(

@@ -6,6 +6,7 @@ public class OperationTransformer {
 
     public static void transformInsert(InsertOperation op1, InsertOperation op2)
     {
+        //TODO: law el row full w h insert in it ha7tag anazel ay haga b3d el insert lel next row f kolo
         if (op1.getRow() == op2.getRow() && op1.getCol() > op2.getCol())
         {
             op1.setCol(op1.getCol() + 1);

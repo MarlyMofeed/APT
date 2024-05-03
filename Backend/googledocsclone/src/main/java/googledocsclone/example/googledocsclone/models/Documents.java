@@ -17,7 +17,7 @@ public class Documents {
     private String id;
     @Indexed(unique = true)
     private String name;
-    private String content;
+    private char[][] content;
     private String ownerId;
     private String sharedWith;
 
