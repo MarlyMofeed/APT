@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:texteditor/views/file_management.dart';
@@ -23,30 +25,40 @@ class _SignupState extends State<Signup> {
       TextEditingController();
 
   final Box _boxAccounts = Hive.box("accounts");
+  late String errorSignUp = "";
   bool _obscurePassword = true;
   Future<void> _handleSignup() async {
+    print("wselnaaaa");
+    print(_formKey.currentState!.validate());
     if (_formKey.currentState!.validate()) {
       try {
-        print("YA NAAAAAAAAS");
-        print(_controllerUsername.text);
-        print(_controllerPassword.text);
-        print(_controllerEmail.text);
-
+        print("hb3at al response ahw");
         final response = await UserController.signup(
           _controllerUsername.text,
           _controllerPassword.text,
           _controllerEmail.text,
         );
+        print("3l do8ry hwa da al3ande");
         print(response);
-        // Handle the response here. For example, you can store the user data in Hive.
-        _boxAccounts.put('user', response);
-        // Navigate to the next screen
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => FileManagementPage()),
-        );
+        if (response["message"] == "Username already exists") {
+          setState(() {
+            errorSignUp = response["message"];
+          });
+        } else if (response["message"] == "Email already exists") {
+          setState(() {
+            errorSignUp = response["message"];
+          });
+        } else {
+          setState(() {
+            errorSignUp = "";
+          });
+          _boxAccounts.put('user', response);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FileManagementPage()),
+          );
+        }
       } catch (e) {
-        // Show an error message if the signup failed
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to signup: $e')),
         );
@@ -75,6 +87,12 @@ class _SignupState extends State<Signup> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 35),
+              if (errorSignUp.isNotEmpty)
+                Text(
+                  errorSignUp,
+                  style: TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _controllerUsername,
                 keyboardType: TextInputType.name,
