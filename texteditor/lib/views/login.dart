@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:texteditor/controller/UserController.dart';
 import 'package:texteditor/views/file_management.dart';
 
 import 'home.dart';
@@ -24,6 +25,41 @@ class _LoginState extends State<Login> {
   bool _obscurePassword = true;
   final Box _boxLogin = Hive.box("login");
   final Box _boxAccounts = Hive.box("accounts");
+  late String errorLogin = "";
+  Future<void> _handleLogin() async {
+    print(_formKey.currentState!.validate());
+    if (_formKey.currentState!.validate()) {
+      try {
+        final response = await UserController.login(
+          _controllerUsername.text,
+          _controllerPassword.text,
+        );
+        print("ana hena ahwww ");
+        print(response);
+
+        // _boxLogin.put("loginStatus", true);
+        // _boxLogin.put("userName", _controllerUsername.text);
+        if (response["message"] == "User logged in successfully") {
+          print("User logged in successfully");
+          _boxLogin.put("loginStatus", true);
+          _boxLogin.put("userName", _controllerUsername.text);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => FileManagementPage()),
+          );
+        } else {
+          print(response["message"]);
+          setState(() {
+            errorLogin = response["message"];
+          });
+          print("Failed to login: ${response["message"]}");
+        }
+      } catch (e) {
+        print("Failed to login: $e");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +86,12 @@ class _LoginState extends State<Login> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 60),
+              if (errorLogin.isNotEmpty)
+                Text(
+                  errorLogin,
+                  style: TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _controllerUsername,
                 keyboardType: TextInputType.name,
@@ -67,8 +109,6 @@ class _LoginState extends State<Login> {
                 validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return "Please enter username.";
-                  } else if (!_boxAccounts.containsKey(value)) {
-                    return "Username is not registered.";
                   }
 
                   return null;
@@ -102,9 +142,6 @@ class _LoginState extends State<Login> {
                 validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return "Please enter password.";
-                  } else if (value !=
-                      _boxAccounts.get(_controllerUsername.text)) {
-                    return "Wrong password.";
                   }
 
                   return null;
@@ -120,21 +157,7 @@ class _LoginState extends State<Login> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        _boxLogin.put("loginStatus", true);
-                        _boxLogin.put("userName", _controllerUsername.text);
-
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return Home();
-                            },
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: _handleLogin,
                     child: const Text("Login"),
                   ),
                   Row(

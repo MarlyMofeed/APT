@@ -16,9 +16,13 @@ class UserController {
         'password': password,
       }),
     );
+    print("hamdella 3al salama");
+    print(response.body);
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 401) {
+      return {"message": "Invalid credentials"};
     } else {
       throw Exception('Failed to login');
     }
