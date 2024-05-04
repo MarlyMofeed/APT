@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:flutter/services.dart';
 
 class TextEdit extends StatefulWidget {
   const TextEdit({
@@ -13,6 +16,34 @@ class TextEdit extends StatefulWidget {
 
 class _TextEditState extends State<TextEdit> {
   QuillController _controller = QuillController.basic();
+  late IOWebSocketChannel channel;
+  int _cursorPosition = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    //channel = IOWebSocketChannel.connect('ws://localhost/document/updateContent');
+
+    // Listen to the onChange event of the QuillController
+    _controller.addListener(() {
+      // Convert the document to plain text
+      String documentText = _controller.document.toPlainText();
+
+      // Send the document text to the WebSocket server
+     // channel.sink.add(documentText);
+      print(documentText);
+      
+    });
+  }
+
+  @override
+  void dispose() {
+    channel.sink.close();
+    super.dispose();
+  }
+
+ 
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
