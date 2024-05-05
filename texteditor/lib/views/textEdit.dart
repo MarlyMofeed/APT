@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:flutter/services.dart';
+import 'package:web_socket_channel/html.dart';
+
 
 class TextEdit extends StatefulWidget {
   const TextEdit({
@@ -19,7 +21,7 @@ class TextEdit extends StatefulWidget {
 
 class _TextEditState extends State<TextEdit> {
   QuillController _controller = QuillController.basic();
-  late IOWebSocketChannel channel;
+  late HtmlWebSocketChannel channel;
   int _cursorPosition = 0;
   String _previousText = '';
   String operation = '';
@@ -32,7 +34,11 @@ class _TextEditState extends State<TextEdit> {
   void initState() {
     super.initState();
     _previousText = _controller.document.toPlainText();
-
+    try {
+  channel = HtmlWebSocketChannel.connect('ws://localhost:8080/document/socket');
+} catch (e) {
+  print('Error establishing WebSocket connection: $e');
+}
     // Listen to the onChange event of the QuillController
     _controller.addListener(() {
       String currentText = _controller.document.toPlainText();
@@ -49,12 +55,12 @@ class _TextEditState extends State<TextEdit> {
       }
       _previousText = currentText;
       if(operation == 'Insert'){
-        //channel.sink.add('Insert $element $row $column');
-        print('$operation $element in row: $row , column: $column');
+        channel.sink.add('Insert $element $row $column');
+        //print('$operation $element in row: $row , column: $column');
       }
       else if(operation == 'Delete'){
-        //channel.sink.add('Delete $row $column');
-        print('$operation from row: $row , column: $column');
+        channel.sink.add('Delete $row $column');
+        //print('$operation from row: $row , column: $column');
 
       }
       //_cursorPosition = _controller.selection.baseOffset; // Update cursor position
