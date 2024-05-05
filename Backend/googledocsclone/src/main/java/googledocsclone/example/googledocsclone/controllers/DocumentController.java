@@ -1,7 +1,8 @@
 package googledocsclone.example.googledocsclone.controllers;
 
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.data.util.Pair;
 
 import java.util.HashMap;
@@ -37,14 +38,16 @@ public class DocumentController {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private Integer currentVersion;
+    WebSocketController webSocketController;
     List<Pair<String, Integer>> changesBuffer = new ArrayList<>();
     
     List<Map<String, Integer>> editUserLatestVersion = new ArrayList<>();
     
 
-    public DocumentController(DocumentRepository documentRepository, UserRepository userRepository) {
+    public DocumentController(DocumentRepository documentRepository, UserRepository userRepository, WebSocketController webSocketController) {
         this.documentRepository = documentRepository;
         this.userRepository = userRepository;
+        this.webSocketController = webSocketController;
     }
 
     @PostMapping("/add")
@@ -254,10 +257,5 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-    
-
-
-
-
 
 }
