@@ -25,7 +25,7 @@ public class Documents {
     private List<List<Character>> content;
     private String ownerId;
     private String sharedWith;
-    private Integer version=null;
+    private Integer version=0;
     private Map<String, Integer> editUserLatestVersion;
     private int bufferStartVersion;
     private List<Pair<String, Integer>> changesBuffer;

@@ -24,7 +24,7 @@ public class WebSocketController extends TextWebSocketHandler {
     }
 
     public void sendMessageToAll(String message) throws IOException {
-        System.out.println("INSIDE sendMessageToAll");
+        //System.out.println("INSIDE sendMessageToAll");
         for (WebSocketSession session : sessions) {
             if (session.isOpen()) {
                 session.sendMessage(new TextMessage(message));

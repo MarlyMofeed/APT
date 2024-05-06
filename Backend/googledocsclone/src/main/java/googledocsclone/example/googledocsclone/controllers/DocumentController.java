@@ -191,7 +191,7 @@ public class DocumentController {
         }
     }
 
-    @PostMapping("/save")
+    @PutMapping("/save")
     public ResponseEntity<Map<String, Object>> saveDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, Object> body) {
         // String documentId = body.get("id").toString();
         // Map<String, Object> response = new HashMap<>();
@@ -244,7 +244,28 @@ public class DocumentController {
 
         try {
             // Update the document's content
-            List<List<Character>> newContent = (List<List<Character>>) body.get("documentContent");
+            //List<List<Character>> newContent = (List<List<Character>>) body.get("documentContent");
+            String documentContentString = (String) body.get("documentContent");
+            System.out.println("Document content string: " + documentContentString);
+            // print type of documentContentString
+            System.out.println("Type of documentContentString: " + documentContentString.getClass().getName());
+            List<List<Character>> newContent = new ArrayList<>();
+            System.out.println("Type of new Content: " + newContent.getClass().getName());
+            for (String word : documentContentString.split(" ")) {
+                List<Character> wordChars = new ArrayList<>();
+                for (char c : word.toCharArray()) {
+                    wordChars.add(c);
+                }
+                newContent.add(wordChars);
+                System.out.println("Word: " + word);
+                System.out.println("newContent: " + newContent);
+                // print type of newContent
+                System.out.println("Type of newContent: " + newContent.getClass().getName());
+            }
+
+            System.out.println("newContenttttt: " + newContent);
+            System.out.println("Type of newContenttttt: " + newContent.getClass().getName());
+
             document.setContent(newContent);
             documentRepository.save(document);
 

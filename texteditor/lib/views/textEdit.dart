@@ -5,6 +5,9 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:flutter/services.dart';
 import 'package:web_socket_channel/html.dart';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 
 class TextEdit extends StatefulWidget {
@@ -28,12 +31,20 @@ class _TextEditState extends State<TextEdit> {
   int row = 0;
   int column = 0;
   String? element;
+  Timer? _autosaveTimer;
+  String userId = '6633742c11cf8763d7b4b5f3';
+  String documentId = '6633ad108901bd48cf18bb60';
+  List<String> content = ['your', 'document', 'content'];
 
 
   @override
   void initState() {
     super.initState();
     _previousText = _controller.document.toPlainText();
+    _autosaveTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
+    _saveDocument(userId, documentId, _previousText);
+  });
+
     try {
       channel = HtmlWebSocketChannel.connect('ws://localhost:8080/document/editContent/socket');
       print('Connected to WebSocket server!');
@@ -80,8 +91,38 @@ class _TextEditState extends State<TextEdit> {
   @override
   void dispose() {
     channel.sink.close();
+    _autosaveTimer?.cancel();
     super.dispose();
   }
+
+  // void _saveDocument() {
+  //   print('Saving document...');
+  //   String currentText = _controller.document.toPlainText(); // Get the current text in the document
+  //   print('Document content: $currentText');
+  //   // Save the document to the server
+  //   channel.sink.add('Save $currentText');
+  // }
+
+void _saveDocument(String userId, String documentId, String content) async {
+  var url = Uri.parse('http://localhost:8080/document/save');
+
+  var response = await http.put(url, 
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      'userId': userId,
+    },
+    body: jsonEncode(<String, dynamic>{
+      'id': documentId,
+      'documentContent': content,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    print('Document saved successfully');
+  } else {
+    print('Failed to save document');
+  }
+}
 
  void _handleKeyPress(RawKeyEvent event) {
   if (event is RawKeyDownEvent) {
