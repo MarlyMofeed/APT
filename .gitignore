@@ -1,0 +1,6 @@
+
+texteditor/linux/flutter/generated_plugin_registrant.cc
+*.cc
+*.swift
+*.cmake
+texteditor/windows/flutter/generated_plugins.cmake

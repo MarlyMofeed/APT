@@ -36,13 +36,19 @@ class _TextEditState extends State<TextEdit> {
     _previousText = _controller.document.toPlainText();
     try {
       channel = HtmlWebSocketChannel.connect('ws://localhost:8080/document/editContent/socket');
-      channel.stream.listen((message) {
-        // Handle received messages here
-        print('Received message: $message');
-      });
+      print('Connected to WebSocket server!');
+      channel.stream.listen((message) 
+      {
+        print('FRONTEND Received message: $message');
+        },
+        onError: (error) {
+          print('Error NOT listening to stream: $error');
+        },
+      );
     } catch (e) {
       print('Error establishing WebSocket connection: $e');
     }
+    
     // Listen to the onChange event of the QuillController
     _controller.addListener(() {
       String currentText = _controller.document.toPlainText();
