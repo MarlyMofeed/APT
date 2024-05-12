@@ -8,6 +8,13 @@ class Identifier {
   String toString() {
     return 'Identifier(digit: $digit, siteId: $siteId)';
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'digit': this.digit,
+      'siteId': this.siteId,
+    };
+  }
 }
 
 class CRDT {
@@ -52,6 +59,14 @@ class CRDT {
   Map<String, dynamic> localInsert(String value, int index) {
     Map<String, dynamic> char = generateChar(value, index);
     struct.insert(index, char);
+    return char;
+  }
+
+  Map<String, dynamic> localDelete(int index) {
+    if (index < 0 || index >= struct.length) {
+      throw RangeError('index out of range');
+    }
+    Map<String, dynamic> char = struct.removeAt(index);
     return char;
   }
 }
