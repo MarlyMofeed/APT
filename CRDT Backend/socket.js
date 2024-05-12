@@ -21,37 +21,21 @@ const userSocketMap = {}; // {user_id: socketId}
 
 io.on("connection", async (socket) => {
   console.log("a user connected", socket.id);
-  // Get the user from the procided token to fill the userSocketMap.
+  const user_id = socket.handshake.query.id;
+  console.log("ANA FL SOCKETS");
+  console.log(user_id);
 
-  // Extract the token from the query parameter.
-  //const token = socket.handshake.query.token.split(" ")[1];
+  userSocketMap[user_id] = socket.id;
+  console.log(userSocketMap);
 
-  // Verify the token.
-  //let user_token;
+  socket.on("message", (message) => {
+    console.log("Received message: " + message);
+    // Add more logic here to handle incoming messages
+  });
 
-  //   try {
-  //     user_token = jwt.verify(token, process.env.JWT_SECRET);
-  //   } catch (err) {
-  //     console.log({
-  //       err: { status: 401, message: `Invalid Token: ${err.message}` },
-  //     });
-  //     return; // need to check this
-  //   }
-
-  //   const user_id = user_token.user.id;
-  //   const user = await User.findById(user_id);
-
-  //   if (!user) {
-  //     console.log({ err: { status: 404, message: "User not found" } });
-  //   } else {
-  //     userSocketMap[user_id] = socket.id;
-  //     console.log(userSocketMap);
-  //   }
-
-  // socket.on() is used to listen to the events. can be used both on client and server side
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
-    // delete userSocketMap[user_id];
+    delete userSocketMap[user_id]; // Clean up after user disconnects
   });
 });
 
