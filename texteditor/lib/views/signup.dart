@@ -55,7 +55,8 @@ class _SignupState extends State<Signup> {
           _boxAccounts.put('user', response);
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => FileManagementPage()),
+            MaterialPageRoute(
+                builder: (context) => FileManagementPage(id: response["id"])),
           );
         }
       } catch (e) {

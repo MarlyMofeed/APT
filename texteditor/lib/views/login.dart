@@ -43,10 +43,13 @@ class _LoginState extends State<Login> {
           print("User logged in successfully");
           _boxLogin.put("loginStatus", true);
           _boxLogin.put("userName", _controllerUsername.text);
+          _boxLogin.put("userId", response["id"]); // Store the user ID
+          print("User ID: ${response["id"]}");
 
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => FileManagementPage()),
+            MaterialPageRoute(
+                builder: (context) => FileManagementPage(id: response["id"])),
           );
         } else {
           print(response["message"]);
@@ -64,7 +67,7 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     if (_boxLogin.get("loginStatus") ?? false) {
-      return FileManagementPage();
+      return FileManagementPage(id: _boxLogin.get("userId"));
     }
 
     return Scaffold(
