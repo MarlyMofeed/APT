@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:web_socket_channel/html.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import 'package:http/http.dart' as http;
 
@@ -22,12 +23,8 @@ class TextEdit extends StatefulWidget {
   _TextEditState createState() => _TextEditState();
 }
 
-//Column position = index mod 171
-//Row position = index // 171
-
 class _TextEditState extends State<TextEdit> {
   QuillController _controller = QuillController.basic();
-  late HtmlWebSocketChannel channel;
   int _cursorPosition = 0;
   String _previousText = '';
   String operation = '';
@@ -35,78 +32,40 @@ class _TextEditState extends State<TextEdit> {
   int column = 0;
   String? element;
   Timer? _autosaveTimer;
-  String userId = '6633742c11cf8763d7b4b5f3';
   String documentId = '6633ad108901bd48cf18bb60';
   List<String> content = ['your', 'document', 'content'];
   int version = 0;
   List<Map<String, int>> changesBuffer = [];
+  late IO.Socket socket;
 
   @override
   void initState() {
     super.initState();
     print("IN TEXT EDIT ID: ${widget.id}");
+    socket = IO.io('http://localhost:5000', <String, dynamic>{
+      'transports': ['websocket'],
+      'query': {'id': widget.id},
+    });
+
+    socket.on('connect', (_) {
+      print('connected');
+    });
+    socket.connect();
 
     _previousText = _controller.document.toPlainText();
-    //version = document.ge;
     _autosaveTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
-      _saveDocument(userId, documentId, _previousText);
+      _saveDocument(widget.id, documentId, _previousText);
     });
-
-    try {
-      channel = HtmlWebSocketChannel.connect('ws://localhost:5000');
-      print('Connected to WebSocket server!');
-      channel.stream.listen(
-        (message) {
-          print('FRONTEND Received message: $message');
-        },
-        onError: (error) {
-          print('Error NOT listening to stream: $error');
-        },
-      );
-    } catch (e) {
-      print('Error establishing WebSocket connection: $e');
-    }
-
-    // Listen to the onChange event of the QuillController
-    _controller.addListener(() {
-      String currentText = _controller.document.toPlainText();
-      if (currentText.length > _previousText.length) {
-        int addedIndex = _findAddedIndex(_previousText, currentText);
-        //print('Text added at index: $addedIndex');
-        row = addedIndex ~/ 171;
-        column = addedIndex % 171;
-      } else if (currentText.length < _previousText.length) {
-        int removedIndex = _findRemovedIndex(_previousText, currentText);
-        //print('Text removed at index: $removedIndex');
-        row = removedIndex ~/ 171;
-        column = removedIndex % 171;
-      }
-      _previousText = currentText;
-      if (operation == 'Insert') {
-        channel.sink.add('Insert $element $row $column');
-        //print('$operation $element in row: $row , column: $column');
-      } else if (operation == 'Delete') {
-        channel.sink.add('Delete $row $column');
-        //print('$operation from row: $row , column: $column');
-      }
-      //_cursorPosition = _controller.selection.baseOffset; // Update cursor position
-    });
+    socket.on('disconnect', (_) => print('disconnected'));
+    socket.on('error', (data) => print('error: $data'));
   }
 
   @override
   void dispose() {
-    channel.sink.close();
+    socket.disconnect();
     _autosaveTimer?.cancel();
     super.dispose();
   }
-
-  // void _saveDocument() {
-  //   print('Saving document...');
-  //   String currentText = _controller.document.toPlainText(); // Get the current text in the document
-  //   print('Document content: $currentText');
-  //   // Save the document to the server
-  //   channel.sink.add('Save $currentText');
-  // }
 
   void _saveDocument(String userId, String documentId, String content) async {
     var url = Uri.parse('http://localhost:8080/document/save');
@@ -147,24 +106,6 @@ class _TextEditState extends State<TextEdit> {
       }
       //print('Cursor position: $_cursorPosition'); //not accurate awy aw msh fhma howa shaghal ezay?
     }
-  }
-
-  int _findAddedIndex(String previousText, String currentText) {
-    for (int i = 0; i < currentText.length; i++) {
-      if (i >= previousText.length || previousText[i] != currentText[i]) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  int _findRemovedIndex(String previousText, String currentText) {
-    for (int i = 0; i < previousText.length; i++) {
-      if (i >= currentText.length || previousText[i] != currentText[i]) {
-        return i;
-      }
-    }
-    return -1;
   }
 
   @override
