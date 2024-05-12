@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:texteditor/service/CRDT.dart';
 import 'package:web_socket_channel/html.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -37,11 +38,13 @@ class _TextEditState extends State<TextEdit> {
   int version = 0;
   List<Map<String, int>> changesBuffer = [];
   late IO.Socket socket;
+  late CRDT crdt;
 
   @override
   void initState() {
     super.initState();
     print("IN TEXT EDIT ID: ${widget.id}");
+    crdt = CRDT(widget.id);
     socket = IO.io('http://localhost:5000', <String, dynamic>{
       'transports': ['websocket'],
       'query': {'id': widget.id},
@@ -74,7 +77,7 @@ class _TextEditState extends State<TextEdit> {
       url,
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'userId': userId,
+        'userId': widget.id,
       },
       body: jsonEncode(<String, dynamic>{
         'id': documentId,
@@ -89,22 +92,42 @@ class _TextEditState extends State<TextEdit> {
     }
   }
 
+  void handleLocalInsert(String value, int index) {
+    Map<String, dynamic> char = crdt.localInsert(value, index);
+    print("HANDLE LOCAL INSERT: $char");
+    socket.emit('localInsert', char);
+  }
+
+  void handleLocalDelete(int index) {
+    Map<String, dynamic> char = crdt.localDelete(index);
+    print("HANDLE LOCAL DELETE: $char");
+    socket.emit('localDelete', char);
+  }
+
+  // ignore: deprecated_member_use
   void _handleKeyPress(RawKeyEvent event) {
+    // ignore: deprecated_member_use
     if (event is RawKeyDownEvent) {
       LogicalKeyboardKey logicalKey = event.logicalKey;
-      String? keyLabel = logicalKey.keyLabel ?? logicalKey.debugName;
-      //print('Key pressed: $keyLabel');
+      String? keyLabel = logicalKey.keyLabel;
+
       if (keyLabel == 'Backspace') {
+        // Handle backspace key press
+        print("insideeee delete");
         operation = 'Delete';
-      } else if (keyLabel == 'Enter') {
-        operation = 'Insert';
-        element = 'New Line';
-        row++;
+        int deleteIndex = _controller.selection.baseOffset - 1;
+        print("position: ${_controller.selection.baseOffset}");
+        if (deleteIndex >= 0) {
+          handleLocalDelete(deleteIndex);
+        }
       } else {
+        print("insideeee insert");
+        // Handle other key presses (alphabets, numbers, etc.)
         operation = 'Insert';
-        element = keyLabel;
+        print("Element: $keyLabel");
+        print("position: ${_controller.selection.baseOffset}");
+        handleLocalInsert(keyLabel, _controller.selection.baseOffset);
       }
-      //print('Cursor position: $_cursorPosition'); //not accurate awy aw msh fhma howa shaghal ezay?
     }
   }
 
