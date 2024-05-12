@@ -42,6 +42,10 @@ class Document {
 // }
 
 class FileManagementPage extends StatefulWidget {
+  final String id;
+
+  FileManagementPage({Key? key, required this.id}) : super(key: key);
+
   @override
   _FileManagementPageState createState() => _FileManagementPageState();
 }
@@ -91,22 +95,22 @@ class _FileManagementPageState extends State<FileManagementPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-              child: IconButton(
-                onPressed: () {
-                  _boxLogin.clear();
-                  _boxLogin.put("loginStatus", false);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const Login();
-                      },
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.logout_rounded),
-              ),
+            child: IconButton(
+              onPressed: () {
+                _boxLogin.clear();
+                _boxLogin.put("loginStatus", false);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const Login();
+                    },
+                  ),
+                );
+              },
+              icon: const Icon(Icons.logout_rounded),
             ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -161,7 +165,9 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => TextEdit()));
+                                          builder: (context) => TextEdit(
+                                                id: widget.id,
+                                              )));
                                 },
                                 trailing: PopupMenuButton<String>(
                                   itemBuilder: (context) => [
