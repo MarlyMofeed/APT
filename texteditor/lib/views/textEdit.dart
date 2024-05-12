@@ -1,65 +1,21 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:flutter/services.dart';
-import 'package:web_socket_channel/html.dart';
 import 'dart:async';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-//pendingOperation=Null
-//changesBufferQueue = null initially
-//version=0 on start
-//document = null
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:web_socket_channel/html.dart';
 
-//onStart() -> init state {
-//get document from server
-//version = doc.version
-//  document = doc.content}
-
-//handleEdit(change) -> change da howa eli bngebo mn el key press already m3mol
-//{
-//document.apply(change) -> da already byhsal
-//hatzawedo if pending==null
-//then pending = {change, version}
-//send to server
-//
-//if pending not null -> changeBuffer.add(change)}
-
-//transformPending(change) -> banadeha lama el server yb3tli nack AKA not my applied or pending operation
-//{
-//version++
-// document.applyChange(change)
-// if pending msh b null
-// bagy hena a3ml transformation lel pending operation wel transorm mwgod fl BE khodoh w transform to flutter hena
-// then update el version
-// then for each element gowa el changes buffer brdo apply transformation 3shan lazm}
-
-//processMessage(replyFromServer)
-//{
-//if reply == pending -> hasal ack, hasheel el pending arg3o b null then version++
-//check law el changes buffer not empty, if yes put first one in pending and send to server
-//
-//if reply != pending (version of received law equals my own version) -> hasal nack
-//ely ha3mlo hena ha add el change da to my document version, transform my pending and all changes inside changes buffer then
-//resend the pending after transformation
-//
-//3andi case en el client momkn ykon several versions behind, fata7 mt2khr aw connection issues aw whatever wl changes de not yet autosaved to db
-//eli mfrod yehsl hena b2a en fe haga fl server esmha send updates byb3t el saved updates eli 3ndo according to version
-//client hena byakhod el buffer da w y apply transformation l kol element in the buffer tol ma el version > my own version until i catch up
-//}
-
-//changesbuffer in backend = [insert a at 0 0, insert b at 0 1, delete at 0 0]
-// el kalam da FEL BACKEND
-// this means en insert a at 0 0 de heya version 0 of document
-// insert b at 0 1 de heya version 1 of document
-// delete at 0 0 de heya version 2 of document
+import 'package:http/http.dart' as http;
 
 class TextEdit extends StatefulWidget {
+  final String id;
+
   const TextEdit({
     Key? key,
+    required this.id,
   }) : super(key: key);
 
   @override
@@ -88,6 +44,8 @@ class _TextEditState extends State<TextEdit> {
   @override
   void initState() {
     super.initState();
+    print("IN TEXT EDIT ID: ${widget.id}");
+
     _previousText = _controller.document.toPlainText();
     //version = document.ge;
     _autosaveTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
@@ -95,8 +53,7 @@ class _TextEditState extends State<TextEdit> {
     });
 
     try {
-      channel = HtmlWebSocketChannel.connect(
-          'ws://localhost:8080/document/editContent/socket');
+      channel = HtmlWebSocketChannel.connect('ws://localhost:5000');
       print('Connected to WebSocket server!');
       channel.stream.listen(
         (message) {
