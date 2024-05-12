@@ -28,14 +28,17 @@ io.on("connection", async (socket) => {
   userSocketMap[user_id] = socket.id;
   console.log(userSocketMap);
 
-  socket.on("message", (message) => {
-    console.log("Received message: " + message);
-    // Add more logic here to handle incoming messages
+  socket.on("localInsert", (character) => {
+    console.log("Received local insert operation: ", character);
+    socket.broadcast.emit("remoteInsert", character);
   });
-
+  socket.on("localDelete", (character) => {
+    console.log("Received local delete operation: ", character);
+    socket.broadcast.emit("remoteDelete", character);
+  });
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
-    delete userSocketMap[user_id]; // Clean up after user disconnects
+    delete userSocketMap[user_id];
   });
 });
 
