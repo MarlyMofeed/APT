@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:texteditor/views/textEdit.dart';
+import 'package:http/http.dart' as http;
+
 //import 'package:material_floating_search_bar/material_floating_search_bar.dart';
 
 import 'login.dart';
@@ -69,6 +73,31 @@ class _FileManagementPageState extends State<FileManagementPage> {
     setState(() {
       ownedDocuments.add(document);
     });
+  }
+
+  Future<void> createDocument(String userId, String documentName) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:8080/document/add'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'userId': userId,
+      },
+      body: jsonEncode(<String, String>{
+        'documentName': documentName,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> result = jsonDecode(response.body);
+      print(result['message']); // Document added successfully
+
+      Map<String, dynamic> document = result['document'];
+      print('Document ID: ${document['id']}');
+      print('Document Name: ${document['name']}');
+      print('Owner ID: ${document['ownerId']}');
+    } else {
+      throw Exception('Failed to add document');
+    }
   }
 
   @override
@@ -321,26 +350,9 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                 child: TextButton(
                                   child: Text('Done'),
                                   onPressed: () {
-                                    if (_formKey.currentState?.validate() ??
-                                        false) {
-                                      // setState(() {
-                                      //   ownedDocuments.add(Document(
-                                      //     id: ownedDocuments.length + 1,
-                                      //     name: _controller.text,
-                                      //     owner: _boxLogin.get("userName") ?? 'Default User',
-                                      //     isOwnedByUser: true
-                                      //   ));
-                                      addDocument(Document(
-                                          id: ownedDocuments.length + 1,
-                                          name: _controller.text,
-                                          owner: 'Default User',
-                                          isOwnedByUser: true));
-                                      // print owneddocuments list
-                                      for (var document in ownedDocuments) {
-                                        print(document);
-                                      }
-                                      Navigator.of(context).pop();
-                                    }
+                                    String documentName = _controller.text;
+                                    createDocument(widget.id, documentName);
+                                    Navigator.of(context).pop();
                                   },
                                 ),
                               ),
