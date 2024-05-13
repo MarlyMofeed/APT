@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:texteditor/service/CRDT.dart';
-import 'package:web_socket_channel/html.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import 'package:http/http.dart' as http;
