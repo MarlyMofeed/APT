@@ -30,7 +30,6 @@ import googledocsclone.example.googledocsclone.repositories.UserRepository;
 import googledocsclone.example.googledocsclone.models.Documents;
 import googledocsclone.example.googledocsclone.models.User;
 
-
 @RestController
 @RequestMapping("/document")
 public class DocumentController {
@@ -40,18 +39,19 @@ public class DocumentController {
     private Integer currentVersion;
     WebSocketController webSocketController;
     List<Pair<String, Integer>> changesBuffer = new ArrayList<>();
-    
-    List<Map<String, Integer>> editUserLatestVersion = new ArrayList<>();
-    
 
-    public DocumentController(DocumentRepository documentRepository, UserRepository userRepository, WebSocketController webSocketController) {
+    List<Map<String, Integer>> editUserLatestVersion = new ArrayList<>();
+
+    public DocumentController(DocumentRepository documentRepository, UserRepository userRepository,
+            WebSocketController webSocketController) {
         this.documentRepository = documentRepository;
         this.userRepository = userRepository;
         this.webSocketController = webSocketController;
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> addDocument(@RequestHeader("userId") String userId,
+            @RequestBody Map<String, String> body) {
         Documents document = new Documents();
         document.setName(body.get("documentName"));
         documentRepository.save(document);
@@ -81,7 +81,8 @@ public class DocumentController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<Map<String, Object>> deleteDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> deleteDocument(@RequestHeader("userId") String userId,
+            @RequestBody Map<String, String> body) {
         String documentId = body.get("id");
         String documentName = body.get("documentName");
         Map<String, Object> response = new HashMap<>();
@@ -119,7 +120,8 @@ public class DocumentController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<Map<String, Object>> updateDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> updateDocument(@RequestHeader("userId") String userId,
+            @RequestBody Map<String, String> body) {
         String documentId = body.get("id");
         Map<String, Object> response = new HashMap<>();
 
@@ -156,7 +158,8 @@ public class DocumentController {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<Map<String, Object>> getDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> getDocument(@RequestHeader("userId") String userId,
+            @RequestBody Map<String, String> body) {
         String documentId = body.get("id");
         Map<String, Object> response = new HashMap<>();
 
@@ -179,8 +182,8 @@ public class DocumentController {
             // Return the document details
             response.put("message", "Document retrieved successfully");
             response.put("document", document);
-          
-            if(currentVersion==null || currentVersion < document.getVersion()){
+
+            if (currentVersion == null || currentVersion < document.getVersion()) {
                 currentVersion = document.getVersion();
             }
 
@@ -192,36 +195,39 @@ public class DocumentController {
     }
 
     @PutMapping("/save")
-    public ResponseEntity<Map<String, Object>> saveDocument(@RequestHeader("userId") String userId, @RequestBody Map<String, Object> body) {
+    public ResponseEntity<Map<String, Object>> saveDocument(@RequestHeader("userId") String userId,
+            @RequestBody Map<String, Object> body) {
         // String documentId = body.get("id").toString();
         // Map<String, Object> response = new HashMap<>();
 
         // // Find the user
         // Optional<User> optionalUser = userRepository.findById(userId);
         // if (optionalUser.isEmpty()) {
-        //     response.put("message", "User not found");
-        //     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        // response.put("message", "User not found");
+        // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         // }
         // User user = optionalUser.get();
 
         // // Find the document by ID and user ID
-        // Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
+        // Documents document = documentRepository.findByIdAndOwnerId(documentId,
+        // userId);
         // if (document == null) {
-        //     response.put("message", "Document not found");
-        //     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        // response.put("message", "Document not found");
+        // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         // }
 
         // try {
-        //     // Save the document
-        //     documentRepository.save(document);
+        // // Save the document
+        // documentRepository.save(document);
 
-        //     response.put("message", "Document saved successfully");
-        //     response.put("document", document);
+        // response.put("message", "Document saved successfully");
+        // response.put("document", document);
 
-        //     return ResponseEntity.ok(response);
+        // return ResponseEntity.ok(response);
         // } catch (Exception e) {
-        //     response.put("message", "Error saving document: " + e.getMessage());
-        //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        // response.put("message", "Error saving document: " + e.getMessage());
+        // return
+        // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         // }
 
         String documentId = body.get("id").toString();
@@ -244,7 +250,8 @@ public class DocumentController {
 
         try {
             // Update the document's content
-            //List<List<Character>> newContent = (List<List<Character>>) body.get("documentContent");
+            // List<List<Character>> newContent = (List<List<Character>>)
+            // body.get("documentContent");
             String documentContentString = (String) body.get("documentContent");
             System.out.println("Document content string: " + documentContentString);
             // print type of documentContentString
@@ -277,6 +284,45 @@ public class DocumentController {
             response.put("message", "Error updating document content: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @GetMapping("/user/owns")
+    public ResponseEntity<Map<String, Object>> getUserDocuments(@RequestHeader("userId") String userId) {
+        Map<String, Object> response = new HashMap<>();
+        System.out.println("hgebbb documents: " );
+        System.out.println("userId: " + userId);
+
+        // Find the user
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            response.put("message", "User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        User user = optionalUser.get();
+
+        // Get the user's document IDs
+        List<String> documentIds = user.getDocumentIds();
+        if (documentIds == null || documentIds.isEmpty()) {
+            response.put("message", "No documents found for this user");
+            return ResponseEntity.ok(response);
+        }
+
+        // Retrieve the documents from the repository
+        List<Documents> documents = documentRepository.findAllById(documentIds);
+
+        // Prepare the response
+        List<Map<String, String>> documentData = new ArrayList<>();
+        for (Documents document : documents) {
+            Map<String, String> data = new HashMap<>();
+            data.put("id", document.getId());
+            data.put("name", document.getName());
+            documentData.add(data);
+        }
+
+        response.put("message", "Documents retrieved successfully");
+        response.put("documents", documentData);
+
+        return ResponseEntity.ok(response);
     }
 
 }
