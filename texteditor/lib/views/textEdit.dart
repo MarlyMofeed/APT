@@ -8,8 +8,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-
 import 'package:http/http.dart' as http;
+// import 'package:uuid/uuid.dart';
 
 class TextEdit extends StatefulWidget {
   final String id;
@@ -44,7 +44,7 @@ class _TextEditState extends State<TextEdit> {
     super.initState();
     print("IN TEXT EDIT ID: ${widget.id}");
     print("documentId: $documentId ");
-    crdt = CRDT(widget.id);
+    crdt = CRDT();
     socket = IO.io('http://localhost:5000', <String, dynamic>{
       'transports': ['websocket'],
       'query': {'id': widget.id, 'documentId': documentId},
@@ -63,7 +63,15 @@ class _TextEditState extends State<TextEdit> {
     socket.on('error', (data) => print('error: $data'));
 
     socket.on('remoteInsert', (data) {
-      handleRemoteInsert(data);
+      print("galy REMOTE INSERT");
+      print(data);
+      Identifier receivedChar = Identifier(
+        data['value'],
+        data['digit'].toDouble(),
+        data['siteId'],
+      );
+      print(receivedChar);
+      handleRemoteInsert(receivedChar);
     });
     socket.on('remoteDelete', (data) {
       handleRemoteDelete(data);
@@ -100,33 +108,34 @@ class _TextEditState extends State<TextEdit> {
   }
 
   void handleLocalInsert(String value, int index) {
-    Map<String, dynamic> char = crdt.localInsert(value, index);
+    Identifier char = crdt.localInsert(value, index);
     print("HANDLE LOCAL INSERT: $char");
     socket.emit('localInsert', char);
   }
 
   void handleLocalDelete(int index) {
-    Map<String, dynamic> char = crdt.localDelete(index);
+    Identifier char = crdt.localDelete(index);
     print("HANDLE LOCAL DELETE: $char");
     socket.emit('localDelete', char);
   }
 
-  void handleRemoteInsert(Map<String, dynamic> char) {
-    Map<String, dynamic> result = crdt.remoteInsert(char);
-    int index = result['index'];
-    String value = result['char'];
+  void handleRemoteInsert(Identifier char) {
+    Identifier result = crdt.remoteInsert(char);
+    int index = crdt.findIndex(crdt.struct, result) - 1;
+    print("index: $index");
+    String value = result.value;
     // Insert the character at the correct position in the text controller
     _controller.replaceText(
         index, 0, value, TextSelection.collapsed(offset: index + value.length));
   }
 
   void handleRemoteDelete(Map<String, dynamic> char) {
-    int index = crdt.remoteDelete(char);
+    // int index = crdt.remoteDelete(char);
     // Delete the character at the correct position in the text controller
-    if (index != -1) {
-      _controller.replaceText(
-          index, 1, '', TextSelection.collapsed(offset: index));
-    }
+    // if (index != -1) {
+    //   _controller.replaceText(
+    //       index, 1, '', TextSelection.collapsed(offset: index));
+    // }
   }
 
   // ignore: deprecated_member_use
