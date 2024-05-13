@@ -43,10 +43,11 @@ class _TextEditState extends State<TextEdit> {
   void initState() {
     super.initState();
     print("IN TEXT EDIT ID: ${widget.id}");
+    print("documentId: $documentId ");
     crdt = CRDT(widget.id);
     socket = IO.io('http://localhost:5000', <String, dynamic>{
       'transports': ['websocket'],
-      'query': {'id': widget.id},
+      'query': {'id': widget.id, 'documentId': documentId},
     });
 
     socket.on('connect', (_) {
@@ -60,6 +61,13 @@ class _TextEditState extends State<TextEdit> {
     });
     socket.on('disconnect', (_) => print('disconnected'));
     socket.on('error', (data) => print('error: $data'));
+
+    socket.on('remoteInsert', (data) {
+      handleRemoteInsert(data);
+    });
+    socket.on('remoteDelete', (data) {
+      handleRemoteDelete(data);
+    });
   }
 
   @override
@@ -101,6 +109,24 @@ class _TextEditState extends State<TextEdit> {
     Map<String, dynamic> char = crdt.localDelete(index);
     print("HANDLE LOCAL DELETE: $char");
     socket.emit('localDelete', char);
+  }
+
+  void handleRemoteInsert(Map<String, dynamic> char) {
+    Map<String, dynamic> result = crdt.remoteInsert(char);
+    int index = result['index'];
+    String value = result['char'];
+    // Insert the character at the correct position in the text controller
+    _controller.replaceText(
+        index, 0, value, TextSelection.collapsed(offset: index + value.length));
+  }
+
+  void handleRemoteDelete(Map<String, dynamic> char) {
+    int index = crdt.remoteDelete(char);
+    // Delete the character at the correct position in the text controller
+    if (index != -1) {
+      _controller.replaceText(
+          index, 1, '', TextSelection.collapsed(offset: index));
+    }
   }
 
   // ignore: deprecated_member_use
