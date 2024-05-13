@@ -59,15 +59,18 @@ class _FileManagementPageState extends State<FileManagementPage> {
         'documentName': documentName,
       }),
     );
-
     if (response.statusCode == 200) {
       Map<String, dynamic> result = jsonDecode(response.body);
-      print(result['message']); // Document added successfully
-
+      print(result['message']);
       Map<String, dynamic> document = result['document'];
-      List<Document> documents = await getUserDocuments(userId);
+      Document newDocument = Document(
+        id: document['id'].toString(),
+        name: document['name'],
+        owner: userId,
+        isOwnedByUser: true,
+      );
       setState(() {
-        ownedDocuments = documents;
+        ownedDocuments.add(newDocument);
       });
     } else {
       throw Exception('Failed to add document');
@@ -95,6 +98,29 @@ class _FileManagementPageState extends State<FileManagementPage> {
       }).toList();
     } else {
       throw Exception('Failed to get user documents');
+    }
+  }
+
+  Future<void> deleteDocument(String userId, String documentName) async {
+    print('Deleting document');
+    print("userId: $userId, documentName: $documentName");
+    final response = await http.delete(
+      Uri.parse('http://localhost:8080/document/delete'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'userId': userId,
+      },
+      body: jsonEncode(<String, String>{
+        'documentName': documentName,
+      }),
+    );
+    if (response.statusCode == 200) {
+      print('Document deleted successfully');
+      setState(() {
+        ownedDocuments.removeWhere((doc) => doc.name == documentName);
+      });
+    } else {
+      throw Exception('Failed to delete document');
     }
   }
 
@@ -208,6 +234,10 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                   ],
                                   onSelected: (value) {
                                     // TODO: Handle selected option
+                                    if (value == 'Delete') {
+                                      deleteDocument(widget.id,
+                                          ownedDocuments[index].name);
+                                    }
                                   },
                                 ),
                               ),
