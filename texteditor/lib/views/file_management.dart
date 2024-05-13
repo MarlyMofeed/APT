@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:texteditor/Components/sharedDocument.dart';
 import 'package:texteditor/views/textEdit.dart';
 import 'package:http/http.dart' as http;
 
@@ -9,7 +10,7 @@ import 'login.dart';
 
 class Document {
   final String id;
-  final String name;
+  String name;
   final String owner;
   final bool isOwnedByUser;
 
@@ -124,6 +125,69 @@ class _FileManagementPageState extends State<FileManagementPage> {
     }
   }
 
+  Future<void> updateDocumentName(
+      String userId, String oldName, String newName) async {
+    var url = 'http://localhost:8080/document/update';
+    var headers = {
+      'Content-Type': 'application/json',
+      'userId': userId,
+    };
+    var body = jsonEncode({
+      'documentName': oldName,
+      'newDocumentName': newName,
+    });
+
+    var response = await http.put(Uri.parse(url), headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      print('Document updated successfully');
+    } else {
+      print('Failed to update document');
+    }
+  }
+
+  void renameDocument(String userId, String oldName) {
+    final TextEditingController _controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Rename Document'),
+          content: TextField(
+            controller: _controller,
+            decoration: InputDecoration(
+              hintText: "New Document Name",
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Done'),
+              onPressed: () async {
+                String newName = _controller.text.trim();
+                if (newName.isNotEmpty) {
+                  await updateDocumentName(userId, oldName, newName);
+                  setState(() {
+                    Document updatedDocument = ownedDocuments.firstWhere(
+                      (doc) => doc.name == oldName,
+                    );
+                    updatedDocument.name = newName;
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -136,8 +200,6 @@ class _FileManagementPageState extends State<FileManagementPage> {
 
   @override
   Widget build(BuildContext context) {
-    print("Build method called");
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: AppBar(
@@ -174,9 +236,6 @@ class _FileManagementPageState extends State<FileManagementPage> {
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
             ),
-
-            // Padding(
-            //   padding: const EdgeInsets.only(top: 70.0),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -238,6 +297,10 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                       deleteDocument(widget.id,
                                           ownedDocuments[index].name);
                                     }
+                                    if (value == 'Rename') {
+                                      renameDocument(widget.id,
+                                          ownedDocuments[index].name);
+                                    }
                                   },
                                 ),
                               ),
@@ -248,69 +311,9 @@ class _FileManagementPageState extends State<FileManagementPage> {
                     ],
                   ),
                 ),
-
                 SizedBox(width: 50),
-                //Padding(
-                //padding: const EdgeInsets.only(left: 20.0),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Shared Documents',
-                        style: TextStyle(
-                          fontSize: 26,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                      //),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(150, 30, 150, 100),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: sharedDocuments.length,
-                          itemBuilder: (context, index) {
-                            final document = sharedDocuments[index];
-                            //var isEditor;
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              child: ListTile(
-                                title: Text(document.name),
-                                onTap: () {
-                                  // TODO: Handle opening the document
-                                },
-                                trailing: PopupMenuButton<String>(
-                                  itemBuilder: (context) => isEditor
-                                      ? [
-                                          PopupMenuItem(
-                                            value: 'Rename',
-                                            child: Text('Rename'),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'Share',
-                                            child: Text('Share'),
-                                          ),
-                                          // Add more options as needed
-                                        ]
-                                      : [],
-                                  onSelected: (value) {
-                                    // Handle selected option
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                SharedDocuments(
+                    sharedDocuments: sharedDocuments, isEditor: isEditor),
               ],
             ),
           ],
@@ -333,15 +336,13 @@ class _FileManagementPageState extends State<FileManagementPage> {
                     child: Form(
                       key: _formKey,
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // add this line
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Padding(
                             padding:
                                 const EdgeInsets.only(bottom: 13.0, top: 5),
                             child: Text(
                               'Enter the document name',
-                              //style: Theme.of(context).textTheme.bodyMedium,
                               style: TextStyle(fontSize: 20),
                               textAlign: TextAlign.left,
                             ),
@@ -392,7 +393,6 @@ class _FileManagementPageState extends State<FileManagementPage> {
           label: Text(
             'New Document',
             style: TextStyle(
-              // make colour dark blue
               color: Color.fromARGB(255, 15, 113, 193),
             ),
           ),
@@ -407,9 +407,4 @@ class _FileManagementPageState extends State<FileManagementPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-
-  // @override
-  //   void setState(VoidCallback fn) {
-  //     super.setState(fn);
-  //   }
 }
