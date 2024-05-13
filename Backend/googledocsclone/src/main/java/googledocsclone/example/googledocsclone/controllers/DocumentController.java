@@ -83,8 +83,8 @@ public class DocumentController {
     @DeleteMapping("/delete")
     public ResponseEntity<Map<String, Object>> deleteDocument(@RequestHeader("userId") String userId,
             @RequestBody Map<String, String> body) {
-        String documentId = body.get("id");
         String documentName = body.get("documentName");
+       
         Map<String, Object> response = new HashMap<>();
 
         // Find the user
@@ -94,6 +94,7 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         User user = optionalUser.get();
+        String documentId = documentRepository.findByName(documentName).getId();
 
         // Find the document by name and user ID
         Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
@@ -103,7 +104,7 @@ public class DocumentController {
         }
 
         // Remove the document's ID from the user's documentIds list
-        user.getDocumentIds().remove(document.getId());
+        user.getDocumentIds().remove(documentId);
 
         // Save the updated user
         userRepository.save(user);
