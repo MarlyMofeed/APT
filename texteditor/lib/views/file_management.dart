@@ -5,20 +5,13 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:texteditor/views/textEdit.dart';
 import 'package:http/http.dart' as http;
 
-//import 'package:material_floating_search_bar/material_floating_search_bar.dart';
-
 import 'login.dart';
 
-// void main() {
-//   runApp(FileManagementPage());
-// }
-
 class Document {
-  final int id;
+  final String id;
   final String name;
   final String owner;
-  final bool
-      isOwnedByUser; // Whether the document is owned by the user or shared by others
+  final bool isOwnedByUser;
 
   Document({
     required this.id,
@@ -34,17 +27,6 @@ class Document {
   }
 }
 
-// class MyApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     print('Build method called');
-
-//     return MaterialApp(
-//       home: FileManagementPage(),
-//     );
-//   }
-// }
-
 class FileManagementPage extends StatefulWidget {
   final String id;
 
@@ -59,21 +41,12 @@ class _FileManagementPageState extends State<FileManagementPage> {
 
   bool isEditor = true;
 
-  List<Document> ownedDocuments = [
-    Document(id: 1, name: 'Document 1', owner: 'User 1', isOwnedByUser: true),
-    // Add more owned documents here
-  ];
+  List<Document> ownedDocuments = [];
 
   final List<Document> sharedDocuments = [
-    Document(id: 2, name: 'Document 2', owner: 'User 2', isOwnedByUser: false),
-    // Add more shared documents here
+    Document(
+        id: "2", name: 'Document 2', owner: 'User 2', isOwnedByUser: false),
   ];
-
-  void addDocument(Document document) {
-    setState(() {
-      ownedDocuments.add(document);
-    });
-  }
 
   Future<void> createDocument(String userId, String documentName) async {
     final response = await http.post(
@@ -92,12 +65,47 @@ class _FileManagementPageState extends State<FileManagementPage> {
       print(result['message']); // Document added successfully
 
       Map<String, dynamic> document = result['document'];
-      print('Document ID: ${document['id']}');
-      print('Document Name: ${document['name']}');
-      print('Owner ID: ${document['ownerId']}');
+      List<Document> documents = await getUserDocuments(userId);
+      setState(() {
+        ownedDocuments = documents;
+      });
     } else {
       throw Exception('Failed to add document');
     }
+  }
+
+  Future<List<Document>> getUserDocuments(String userId) async {
+    final response = await http.get(
+      Uri.parse('http://localhost:8080/document/user/owns'),
+      headers: <String, String>{
+        'userId': userId,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final responseBody = json.decode(response.body);
+      final documentsJson = responseBody['documents'] as List;
+      return documentsJson.map((document) {
+        return Document(
+          id: document['id'].toString(),
+          name: document['name'],
+          owner: userId,
+          isOwnedByUser: true,
+        );
+      }).toList();
+    } else {
+      throw Exception('Failed to get user documents');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getUserDocuments(widget.id).then((documents) {
+      setState(() {
+        ownedDocuments = documents;
+      });
+    });
   }
 
   @override
@@ -107,18 +115,6 @@ class _FileManagementPageState extends State<FileManagementPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       appBar: AppBar(
-        //backgroundColor: Colors.white,
-        // title: Row(
-        //   children: <Widget>[
-        //     //Icon(Icons.file_copy), // replace with your desired icon
-        //     SizedBox(width:10), // gives some horizontal space between the icon and the text
-        //     Text(
-        //       "File Management",
-        //       //style: Theme.of(context).textTheme.headlineLarge,
-        //       style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-        //     ),
-        //   ],
-        // ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -144,13 +140,11 @@ class _FileManagementPageState extends State<FileManagementPage> {
       ),
       body: SingleChildScrollView(
         child: Column(
-          //crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 50.0, bottom: 50.0),
               child: Text(
                 "File Management",
-                //style: Theme.of(context).textTheme.headlineLarge,
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
             ),
@@ -190,7 +184,6 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                 title: Text(ownedDocuments[index].name),
                                 //subtitle: Text('Owned by: ${ownedDocuments[index].owner}'),
                                 onTap: () {
-                                  // Go to the text editor page
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -379,7 +372,6 @@ class _FileManagementPageState extends State<FileManagementPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50.0),
           ),
-          // align button in middle of screen
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
