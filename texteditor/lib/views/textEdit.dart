@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,6 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
-
 
 // import 'package:uuid/uuid.dart';
 
@@ -114,7 +114,7 @@ class _TextEditState extends State<TextEdit> {
   }
 
   void handleLocalInsert(String value, int index, int bold, int italic) {
-    Identifier char = crdt.localInsert(value, index,bold, italic);
+    Identifier char = crdt.localInsert(value, index, bold, italic);
     print("HANDLE LOCAL INSERT: $char");
     socket.emit('localInsert', char);
   }
@@ -131,28 +131,26 @@ class _TextEditState extends State<TextEdit> {
     print("index: $index");
     String value = result.value;
     // Insert the character at the correct position in the text controller
-   
-         // Apply formatting based on the isBold and isItalic flags
 
-  if (char.bold == 1&& char.italic == 1) {
-     _controller.replaceText(
-        index, 0, value, TextSelection.collapsed(offset: index + value.length));
-    _controller.formatText(index, value.length, Attribute.bold);
-    _controller.formatText(index, value.length, Attribute.italic);
-  } else if (char.bold == 1) {
-     _controller.replaceText(
-        index, 0, value, TextSelection.collapsed(offset: index + value.length));
-    _controller.formatText(index, value.length, Attribute.bold);
-  } else if (char.italic == 1) {
-     _controller.replaceText(
-        index, 0, value, TextSelection.collapsed(offset: index + value.length));
-    _controller.formatText(index, value.length, Attribute.italic);
-  }
-  else {
- _controller.replaceText(
-        index, 0, value, TextSelection.collapsed(offset: index + value.length));
-  }
-  
+    // Apply formatting based on the isBold and isItalic flags
+
+    if (char.bold == 1 && char.italic == 1) {
+      _controller.replaceText(index, 0, value,
+          TextSelection.collapsed(offset: index + value.length));
+      _controller.formatText(index, value.length, Attribute.bold);
+      _controller.formatText(index, value.length, Attribute.italic);
+    } else if (char.bold == 1) {
+      _controller.replaceText(index, 0, value,
+          TextSelection.collapsed(offset: index + value.length));
+      _controller.formatText(index, value.length, Attribute.bold);
+    } else if (char.italic == 1) {
+      _controller.replaceText(index, 0, value,
+          TextSelection.collapsed(offset: index + value.length));
+      _controller.formatText(index, value.length, Attribute.italic);
+    } else {
+      _controller.replaceText(index, 0, value,
+          TextSelection.collapsed(offset: index + value.length));
+    }
   }
 
   void handleRemoteDelete(Map<String, dynamic> char) {
@@ -180,28 +178,23 @@ class _TextEditState extends State<TextEdit> {
         if (deleteIndex >= 0) {
           handleLocalDelete(deleteIndex);
         }
-      }
-      else if(keyLabel=="Caps Lock")
-      {
+      } else if (keyLabel == "Caps Lock") {
         isCaps = 1 - isCaps;
-      } 
-      else {
+      } else {
         print("insideeee insert");
         // Handle other key presses (alphabets, numbers, etc.)
         operation = 'Insert';
         print("Element: $keyLabel");
         print("Ta3deelll");
-        if(isCaps != 1)
-        {
+        if (isCaps != 1) {
           keyLabel = keyLabel!.toLowerCase();
         }
 
         print("Element: $keyLabel");
         print("position: ${_controller.selection.baseOffset}");
 
-        handleLocalInsert(keyLabel, _controller.selection.baseOffset, _isBoldSelected(), _isItalicSelected());
-        
-    
+        handleLocalInsert(keyLabel, _controller.selection.baseOffset,
+            _isBoldSelected(), _isItalicSelected());
       }
     }
   }
@@ -221,7 +214,6 @@ class _TextEditState extends State<TextEdit> {
     }
     return 0;
   }
-
 
   @override
   Widget build(BuildContext context) {
