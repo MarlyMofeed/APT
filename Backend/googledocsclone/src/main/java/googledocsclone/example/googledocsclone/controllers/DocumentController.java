@@ -84,7 +84,7 @@ public class DocumentController {
     public ResponseEntity<Map<String, Object>> deleteDocument(@RequestHeader("userId") String userId,
             @RequestBody Map<String, String> body) {
         String documentName = body.get("documentName");
-       
+
         Map<String, Object> response = new HashMap<>();
 
         // Find the user
@@ -123,10 +123,9 @@ public class DocumentController {
     @PutMapping("/update")
     public ResponseEntity<Map<String, Object>> updateDocument(@RequestHeader("userId") String userId,
             @RequestBody Map<String, String> body) {
-        String documentId = body.get("id");
+        String documentName = body.get("documentName");
         Map<String, Object> response = new HashMap<>();
 
-        // Find the user
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
             response.put("message", "User not found");
@@ -135,16 +134,14 @@ public class DocumentController {
 
         User user = optionalUser.get();
 
-        // Find the document by ID and user ID
-        Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
-        if (document == null) {
-            response.put("message", "Document not found");
+        Documents document = documentRepository.findByName(documentName);
+        if (document == null || !document.getOwnerId().equals(userId)) {
+            response.put("message", "Document not found or you are not the owner");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
         try {
-            // Update the document's name
-            String newName = body.get("documentName");
+            String newName = body.get("newDocumentName");
             document.setName(newName);
             documentRepository.save(document);
 
@@ -290,7 +287,7 @@ public class DocumentController {
     @GetMapping("/user/owns")
     public ResponseEntity<Map<String, Object>> getUserDocuments(@RequestHeader("userId") String userId) {
         Map<String, Object> response = new HashMap<>();
-        System.out.println("hgebbb documents: " );
+        System.out.println("hgebbb documents: ");
         System.out.println("userId: " + userId);
 
         // Find the user
