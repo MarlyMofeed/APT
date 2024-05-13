@@ -49,6 +49,7 @@ class _FileManagementPageState extends State<FileManagementPage> {
         id: "2", name: 'Document 2', owner: 'User 2', isOwnedByUser: false),
   ];
 
+  //FUNCTIONS//
   Future<void> createDocument(String userId, String documentName) async {
     final response = await http.post(
       Uri.parse('http://localhost:8080/document/add'),
@@ -74,7 +75,23 @@ class _FileManagementPageState extends State<FileManagementPage> {
         ownedDocuments.add(newDocument);
       });
     } else {
-      throw Exception('Failed to add document');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to create document'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -98,7 +115,7 @@ class _FileManagementPageState extends State<FileManagementPage> {
         );
       }).toList();
     } else {
-      throw Exception('Failed to get user documents');
+      throw Exception('Failed to retrieve the user documents');
     }
   }
 
@@ -121,7 +138,23 @@ class _FileManagementPageState extends State<FileManagementPage> {
         ownedDocuments.removeWhere((doc) => doc.name == documentName);
       });
     } else {
-      throw Exception('Failed to delete document');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to delete the document'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -142,7 +175,23 @@ class _FileManagementPageState extends State<FileManagementPage> {
     if (response.statusCode == 200) {
       print('Document updated successfully');
     } else {
-      print('Failed to update document');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to update the document name'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -179,6 +228,13 @@ class _FileManagementPageState extends State<FileManagementPage> {
                     updatedDocument.name = newName;
                   });
                   Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Please enter a new document name'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               },
             ),
@@ -188,6 +244,7 @@ class _FileManagementPageState extends State<FileManagementPage> {
     );
   }
 
+//END OF FUNCTIONS//
   @override
   void initState() {
     super.initState();
@@ -375,8 +432,19 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                   child: Text('Done'),
                                   onPressed: () {
                                     String documentName = _controller.text;
-                                    createDocument(widget.id, documentName);
-                                    Navigator.of(context).pop();
+                                    if (documentName.isEmpty) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Please enter document name'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    } else {
+                                      createDocument(widget.id, documentName);
+                                      Navigator.of(context).pop();
+                                    }
                                   },
                                 ),
                               ),
