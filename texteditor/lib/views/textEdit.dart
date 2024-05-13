@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+<<<<<<< Updated upstream
+=======
+// import 'package:web_socket_channel/html.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
+import 'package:http/http.dart' as http;
+>>>>>>> Stashed changes
 
 class TextEdit extends StatefulWidget {
   const TextEdit({
@@ -29,6 +36,7 @@ class _TextEditState extends State<TextEdit> {
                   ),
                 ),
               ),
+<<<<<<< Updated upstream
             ),
             Expanded(
               child: QuillEditor.basic(
@@ -37,6 +45,16 @@ class _TextEditState extends State<TextEdit> {
                   readOnly: false,
                   sharedConfigurations: const QuillSharedConfigurations(
                     locale: Locale('de'),
+=======
+              Expanded(
+                child: QuillEditor.basic(
+                  configurations: QuillEditorConfigurations(
+                    controller: _controller,
+                    // readOnly: false,
+                    sharedConfigurations: const QuillSharedConfigurations(
+                      locale: Locale('en'),
+                    ),
+>>>>>>> Stashed changes
                   ),
                 ),
               ),
