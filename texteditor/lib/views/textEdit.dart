@@ -9,6 +9,8 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
+
+
 // import 'package:uuid/uuid.dart';
 
 class TextEdit extends StatefulWidget {
@@ -38,6 +40,8 @@ class _TextEditState extends State<TextEdit> {
   List<Map<String, int>> changesBuffer = [];
   late IO.Socket socket;
   late CRDT crdt;
+  int isCaps = 0;
+  String previousCharacter = '';
 
   @override
   void initState() {
@@ -69,6 +73,8 @@ class _TextEditState extends State<TextEdit> {
         data['value'],
         data['digit'].toDouble(),
         data['siteId'],
+        data['bold'],
+        data['italic'],
       );
       print(receivedChar);
       handleRemoteInsert(receivedChar);
@@ -107,8 +113,8 @@ class _TextEditState extends State<TextEdit> {
     }
   }
 
-  void handleLocalInsert(String value, int index) {
-    Identifier char = crdt.localInsert(value, index);
+  void handleLocalInsert(String value, int index, int bold, int italic) {
+    Identifier char = crdt.localInsert(value, index,bold, italic);
     print("HANDLE LOCAL INSERT: $char");
     socket.emit('localInsert', char);
   }
@@ -125,8 +131,28 @@ class _TextEditState extends State<TextEdit> {
     print("index: $index");
     String value = result.value;
     // Insert the character at the correct position in the text controller
-    _controller.replaceText(
+   
+         // Apply formatting based on the isBold and isItalic flags
+
+  if (char.bold == 1&& char.italic == 1) {
+     _controller.replaceText(
         index, 0, value, TextSelection.collapsed(offset: index + value.length));
+    _controller.formatText(index, value.length, Attribute.bold);
+    _controller.formatText(index, value.length, Attribute.italic);
+  } else if (char.bold == 1) {
+     _controller.replaceText(
+        index, 0, value, TextSelection.collapsed(offset: index + value.length));
+    _controller.formatText(index, value.length, Attribute.bold);
+  } else if (char.italic == 1) {
+     _controller.replaceText(
+        index, 0, value, TextSelection.collapsed(offset: index + value.length));
+    _controller.formatText(index, value.length, Attribute.italic);
+  }
+  else {
+ _controller.replaceText(
+        index, 0, value, TextSelection.collapsed(offset: index + value.length));
+  }
+  
   }
 
   void handleRemoteDelete(Map<String, dynamic> char) {
@@ -154,16 +180,48 @@ class _TextEditState extends State<TextEdit> {
         if (deleteIndex >= 0) {
           handleLocalDelete(deleteIndex);
         }
-      } else {
+      }
+      else if(keyLabel=="Caps Lock")
+      {
+        isCaps = 1 - isCaps;
+      } 
+      else {
         print("insideeee insert");
         // Handle other key presses (alphabets, numbers, etc.)
         operation = 'Insert';
         print("Element: $keyLabel");
+        print("Ta3deelll");
+        if(isCaps != 1)
+        {
+          keyLabel = keyLabel!.toLowerCase();
+        }
+
+        print("Element: $keyLabel");
         print("position: ${_controller.selection.baseOffset}");
-        handleLocalInsert(keyLabel, _controller.selection.baseOffset);
+
+        handleLocalInsert(keyLabel, _controller.selection.baseOffset, _isBoldSelected(), _isItalicSelected());
+        
+    
       }
     }
   }
+
+  int _isBoldSelected() {
+    Attribute? attribute = _controller.getSelectionStyle().attributes['bold'];
+    if (attribute != null) {
+      return 1;
+    }
+    return 0;
+  }
+
+  int _isItalicSelected() {
+    Attribute? attribute = _controller.getSelectionStyle().attributes['italic'];
+    if (attribute != null) {
+      return 1;
+    }
+    return 0;
+  }
+
 
   @override
   Widget build(BuildContext context) {

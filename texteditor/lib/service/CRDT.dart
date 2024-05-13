@@ -4,12 +4,14 @@ class Identifier {
   String value;
   double digit;
   String siteId;
+  int bold=0;
+  int italic=0;
 
-  Identifier(this.value, this.digit, this.siteId);
+  Identifier(this.value, this.digit, this.siteId, this.bold, this.italic);
 
   @override
   String toString() {
-    return 'Identifier(value: $value ,digit: $digit, siteId: $siteId)';
+    return 'Identifier(value: $value ,digit: $digit, siteId: $siteId , bold: $bold, italic: $italic)';
   }
 
   Map<String, dynamic> toJson() {
@@ -17,6 +19,8 @@ class Identifier {
       'value': this.value,
       'digit': this.digit,
       'siteId': this.siteId,
+      'bold': this.bold,
+      'italic': this.italic,
     };
   }
 }
@@ -26,11 +30,11 @@ class CRDT {
   List<Identifier> struct = [];
 
   CRDT() {
-    struct.add(Identifier('\0', -2000, Uuid().v4()));
-    struct.add(Identifier('\0', 2000, Uuid().v4()));
+    struct.add(Identifier('\0', -2000, Uuid().v4(),0,0));
+    struct.add(Identifier('\0', 2000, Uuid().v4(),0,0));
   }
 
-  Identifier generateChar(String val, int index) {
+  Identifier generateChar(String val, int index, int bold, int italic) {
     print("ANA HENAAA");
     print("INDEX: $index");
     Identifier? posBefore = index == 0 ? struct[0] : struct[index];
@@ -38,13 +42,13 @@ class CRDT {
     print("POS BEFORE: $posBefore");
     print("POS AFTER: $posAfter");
     var siteId = Uuid().v4();
-    Identifier newPos = generatePosBetween(val, posBefore, posAfter, siteId);
+    Identifier newPos = generatePosBetween(val, posBefore, posAfter, siteId, bold, italic);
 
     return newPos;
   }
 
   Identifier generatePosBetween(
-      String value, Identifier? pos1, Identifier? pos2, String siteId) {
+      String value, Identifier? pos1, Identifier? pos2, String siteId, int bold, int italic) {
     // Identifier id1 = pos1.isNotEmpty ? pos1[0] : Identifier(0, siteId);
     // Identifier id2 = pos2.isNotEmpty
     // ? pos2[0]
@@ -57,7 +61,7 @@ class CRDT {
     if (struct.last.digit - newDigit <= 1) {
       struct.last.digit += 200;
     }
-    return Identifier(value, newDigit, siteId);
+    return Identifier(value, newDigit, siteId, bold, italic);
     // }
     // else if (pos2.digit - pos1.digit == 1) {
     //   return generatePosBetween(pos1.sublist(1), pos2, siteId);
@@ -72,8 +76,8 @@ class CRDT {
     return (digit1 + digit2) / 2;
   }
 
-  Identifier localInsert(String value, int index) {
-    Identifier char = generateChar(value, index);
+  Identifier localInsert(String value, int index, int bold, int italic) {
+    Identifier char = generateChar(value, index, bold, italic);
     // struct.insert(index, char);
     struct.add(char);
     struct.sort((a, b) => a.digit.compareTo(b.digit));

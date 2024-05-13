@@ -36,14 +36,14 @@ io.on("connection", async (socket) => {
 
   socket.on("localInsert", (character) => {
     console.log("Received local insert operation: ", character);
-    if (crdtMap[document_id]) {
-      crdtMap[document_id].push(character);
-      crdtMap[document_id].sort((a, b) => {
-        const digitA = parseInt(a.digit);
-        const digitB = parseInt(b.digit);
-        return digitA - digitB;
-      });
-    }
+    // if (crdtMap[document_id]) {
+    //   crdtMap[document_id].push(character);
+    //   crdtMap[document_id].sort((a, b) => {
+    //     const digitA = parseInt(a.digit);
+    //     const digitB = parseInt(b.digit);
+    //     return digitA - digitB;
+    //   });
+    // }
     //TODO: LAW el document msh mawgood fel map
     // crdt.localInsert(character.value, character.);
     // socket.broadcast.emit("remoteInsert", character);
