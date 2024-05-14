@@ -25,6 +25,7 @@ const checkSpan = (struct) => {
 ////////////////////////////////////////////////////////////////////////////////
 const userSocketMap = new Map(); // {user_id: socketId}
 const crdtMap = {}; // {document_id: crdt}
+const socketUser = {}; //{socketId: userId}
 let userDocumentMap = new Map(); // Maps userId to documentId
 // const documentMembersMap = {}; // {document_id: [user_id]}
 io.on("connection", async (socket) => {
@@ -42,7 +43,7 @@ io.on("connection", async (socket) => {
     crdtMap[document_id] = new CRDT();
   }
   userDocumentMap.set(user_id, document_id);
-
+  socketUser[socket.id] = user_id;
   // if (!documentMembersMap[document_id]) {
   //   documentMembersMap[document_id] = 1;
   // } else {
@@ -54,13 +55,14 @@ io.on("connection", async (socket) => {
   } else {
     userSocketMap.get(document_id).set(user_id, socket.id);
   }
-
-  // userSocketMap[user_id] = socket.id;
-  console.log("User MAP", userSocketMap);
-  console.log("User Document MAP", userDocumentMap);
-  console.log("CRDT MAP: ", crdtMap);
   socket.join(document_id);
   console.log("user joined room: ", document_id);
+
+  // userSocketMap[user_id] = socket.id;
+  console.log("User Socket MAP", userSocketMap);
+  console.log("User Document MAP", userDocumentMap);
+  console.log("Socket User MAP", socketUser);
+  console.log("CRDT MAP: ", crdtMap);
 
   socket.on("localInsert", (character) => {
     console.log("Received local insert operation: ", character);
@@ -94,14 +96,41 @@ io.on("connection", async (socket) => {
   socket.on("disconnect", async () => {
     console.log("user disconnected", socket.id);
     // delete userSocketMap[user_id];
-    userSocketMap.get(document_id).delete(user_id);
-    //TODO: EL 7ETA DEH HATBOOOOZ
-    let userId = socketUserMap.get(socket.id);
+    let userId = socketUser[socket.id];
     let documentId = userDocumentMap.get(userId);
-
     console.log(`User ${userId} disconnected from document ${documentId}`);
-    socketUserMap.delete(socket.id);
+    userSocketMap.get(documentId).delete(userId);
     userDocumentMap.delete(userId);
+    if (userSocketMap.get(document_id).size === 0) {
+      console.log("No users in the room");
+      userSocketMap.delete(document_id);
+    }
+
+    //remove the respective entry from the socketUser map
+    delete socketUser[socket.id];
+
+    console.log("User Socket MAP", userSocketMap);
+    console.log("User Document MAP", userDocumentMap);
+    console.log("Socket User MAP", socketUser);
+    console.log("CRDT MAP: ", crdtMap);
+
+    // userSocketMap.get(document_id).delete(user_id);
+    //TODO: EL 7ETA DEH HATBOOOOZ
+    // let userId;
+    // for (let [docId, innerUserSocketMap] of userSocketMap.entries()) {
+    //   for (let [uId, sId] of userSocketMap.entries()) {
+    //     if (sId === socket.id) {
+    //       userId = uId;
+    //       break;
+    //     }
+    //   }
+    //   if (userId) break;
+    // }
+    // let documentId = userDocumentMap.get(userId);
+
+    // console.log(`User ${userId} disconnected from document ${documentId}`);
+    // userSocketMap.get(documentId).delete(userId);
+    // userDocumentMap.delete(userId);
     // if (userSocketMap.get(document_id).size === 0) {
     //   console.log("No users in the room");
     //   let documentId = userSocketMap.get(user_id); // Get the document ID
