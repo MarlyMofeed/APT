@@ -72,6 +72,13 @@ io.on("connection", async (socket) => {
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
     delete userSocketMap[user_id];
+    if (Object.keys(userSocketMap).length === 0) {
+      // userSocketMap is empty
+      console.log("userSocketMap is empty");
+    } else {
+      // userSocketMap is not empty
+      console.log("userSocketMap is not empty, Still some Users are Working");
+    }
   });
 });
 
