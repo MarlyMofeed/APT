@@ -306,6 +306,7 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                       MaterialPageRoute(
                                           builder: (context) => TextEdit(
                                                 id: widget.id,
+                                                documentId: document.id,
                                               )));
                                 },
                                 trailing: PopupMenuButton<String>(

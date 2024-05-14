@@ -110,6 +110,7 @@ class _SharedDocumentsState extends State<SharedDocuments> {
                           MaterialPageRoute(
                             builder: (context) => TextEdit(
                               id: widget.userId,
+                              documentId: document.id,
                             ),
                           ),
                         );
@@ -119,6 +120,7 @@ class _SharedDocumentsState extends State<SharedDocuments> {
                           MaterialPageRoute(
                             builder: (context) => ViewOnly(
                               id: widget.userId,
+                              documentId: document.id,
                             ),
                           ),
                         );

@@ -13,10 +13,12 @@ import 'package:http/http.dart' as http;
 
 class ViewOnly extends StatefulWidget {
   final String id;
+  final String documentId;
 
   const ViewOnly({
     Key? key,
     required this.id,
+    required this.documentId,
   }) : super(key: key);
 
   @override

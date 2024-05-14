@@ -13,10 +13,12 @@ import 'package:http/http.dart' as http;
 
 class TextEdit extends StatefulWidget {
   final String id;
+  final String documentId;
 
   const TextEdit({
     Key? key,
     required this.id,
+    required this.documentId,
   }) : super(key: key);
 
   @override
@@ -44,8 +46,6 @@ class _TextEditState extends State<TextEdit> {
   @override
   void initState() {
     super.initState();
-    print("IN TEXT EDIT ID: ${widget.id}");
-    print("documentId: $documentId ");
     crdt = CRDT();
     // socket = IO.io('http://25.45.201.128:5000', <String, dynamic>{
     //   'transports': ['websocket'],
