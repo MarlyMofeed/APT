@@ -83,8 +83,8 @@ public class DocumentController {
     @DeleteMapping("/delete")
     public ResponseEntity<Map<String, Object>> deleteDocument(@RequestHeader("userId") String userId,
             @RequestBody Map<String, String> body) {
-        String documentId = body.get("id");
         String documentName = body.get("documentName");
+
         Map<String, Object> response = new HashMap<>();
 
         // Find the user
@@ -94,6 +94,7 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         User user = optionalUser.get();
+        String documentId = documentRepository.findByName(documentName).getId();
 
         // Find the document by name and user ID
         Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
@@ -103,7 +104,7 @@ public class DocumentController {
         }
 
         // Remove the document's ID from the user's documentIds list
-        user.getDocumentIds().remove(document.getId());
+        user.getDocumentIds().remove(documentId);
 
         // Save the updated user
         userRepository.save(user);
@@ -122,10 +123,9 @@ public class DocumentController {
     @PutMapping("/update")
     public ResponseEntity<Map<String, Object>> updateDocument(@RequestHeader("userId") String userId,
             @RequestBody Map<String, String> body) {
-        String documentId = body.get("id");
+        String documentName = body.get("documentName");
         Map<String, Object> response = new HashMap<>();
 
-        // Find the user
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
             response.put("message", "User not found");
@@ -134,16 +134,14 @@ public class DocumentController {
 
         User user = optionalUser.get();
 
-        // Find the document by ID and user ID
-        Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
-        if (document == null) {
-            response.put("message", "Document not found");
+        Documents document = documentRepository.findByName(documentName);
+        if (document == null || !document.getOwnerId().equals(userId)) {
+            response.put("message", "Document not found or you are not the owner");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
         try {
-            // Update the document's name
-            String newName = body.get("documentName");
+            String newName = body.get("newDocumentName");
             document.setName(newName);
             documentRepository.save(document);
 
@@ -289,7 +287,7 @@ public class DocumentController {
     @GetMapping("/user/owns")
     public ResponseEntity<Map<String, Object>> getUserDocuments(@RequestHeader("userId") String userId) {
         Map<String, Object> response = new HashMap<>();
-        System.out.println("hgebbb documents: " );
+        System.out.println("hgebbb documents: ");
         System.out.println("userId: " + userId);
 
         // Find the user
@@ -323,6 +321,88 @@ public class DocumentController {
         response.put("documents", documentData);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/user/shared")
+    public ResponseEntity<Map<String, Object>> getSharedDocuments(@RequestHeader("userId") String userId) {
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            response.put("message", "User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        User user = optionalUser.get();
+
+        List<String> editorDocumentIds = user.getEditorDocumentIds();
+        List<String> viewerDocumentIds = user.getViewerDocumentIds();
+        if ((editorDocumentIds == null || editorDocumentIds.isEmpty())
+                && (viewerDocumentIds == null || viewerDocumentIds.isEmpty())) {
+            response.put("message", "No shared documents found for this user");
+            return ResponseEntity.ok(response);
+        }
+
+        List<Documents> editorDocuments = documentRepository.findAllById(editorDocumentIds);
+        List<Documents> viewerDocuments = documentRepository.findAllById(viewerDocumentIds);
+
+        List<Map<String, String>> editorDocumentData = new ArrayList<>();
+        for (Documents document : editorDocuments) {
+            Map<String, String> data = new HashMap<>();
+            data.put("id", document.getId());
+            data.put("name", document.getName());
+            data.put("ownerId", document.getOwnerId());	
+            editorDocumentData.add(data);
+        }
+
+        List<Map<String, String>> viewerDocumentData = new ArrayList<>();
+        for (Documents document : viewerDocuments) {
+            Map<String, String> data = new HashMap<>();
+            data.put("id", document.getId());
+            data.put("name", document.getName());
+            data.put("ownerId", document.getOwnerId());	
+            viewerDocumentData.add(data);
+        }
+
+        response.put("message", "Shared documents retrieved successfully");
+        response.put("editorDocuments", editorDocumentData);
+        response.put("viewerDocuments", viewerDocumentData);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/share")
+    public ResponseEntity<Map<String, Object>> shareDocument(@RequestHeader("userId") String userId,
+            @RequestBody Map<String, String> body) {
+        String documentName = body.get("documentName");
+        String username = body.get("username");
+        String role = body.get("role");
+        Map<String, Object> response = new HashMap<>();
+
+        User userToShareWith = userRepository.findByUsername(username);
+        if (userToShareWith == null) {
+            response.put("message", "User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        Documents document = documentRepository.findByNameAndOwnerId(documentName, userId);
+        if (document == null) {
+            response.put("message", "Document not found or not owned by the current user");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        if (role.equals("editor")) {
+            userToShareWith.getEditorDocumentIds().add(document.getId());
+        } else if (role.equals("viewer")) {
+            userToShareWith.getViewerDocumentIds().add(document.getId());
+        } else {
+            response.put("message", "Invalid role");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        userRepository.save(userToShareWith);
+
+        response.put("message", "Document shared successfully");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 }
