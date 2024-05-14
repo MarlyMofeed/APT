@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ShareDocumentDialog extends StatefulWidget {
+  final String documentName;
+  final String userId;
+
+  const ShareDocumentDialog({
+    Key? key,
+    required this.documentName,
+    required this.userId,
+  }) : super(key: key);
+
   @override
   _ShareDocumentDialogState createState() => _ShareDocumentDialogState();
 }
@@ -9,12 +20,44 @@ class _ShareDocumentDialogState extends State<ShareDocumentDialog> {
   final TextEditingController _userController = TextEditingController();
   String role = 'viewer';
 
+  Future<void> shareDocument(
+      String userId, String documentName, String username, String role) async {
+    print('Sharing document $documentName with user $username with role $role');
+    final url = Uri.parse('http://localhost:8080/document/share');
+    final headers = {'Content-Type': 'application/json', 'userId': userId};
+    final body = jsonEncode({
+      'documentName': documentName,
+      'username': username,
+      'role': role,
+    });
+
+    final response = await http.post(url, headers: headers, body: body);
+    print('Response of share document: ${response.body}');
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Document shared successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      final responseBody = jsonDecode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(responseBody['message'] ?? 'Failed to share document'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Share Document'),
       content: Container(
-        height: 200.0, // Set the height to your desired value
+        height: 200.0,
         child: SingleChildScrollView(
           child: Column(
             children: <Widget>[
@@ -64,7 +107,8 @@ class _ShareDocumentDialogState extends State<ShareDocumentDialog> {
           onPressed: () async {
             String username = _userController.text.trim();
             if (username.isNotEmpty) {
-              // TODO: Share the document with the specified user and role
+              await shareDocument(
+                  widget.userId, widget.documentName, username, role);
               Navigator.of(context).pop();
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
