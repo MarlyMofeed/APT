@@ -9,12 +9,10 @@ import 'package:texteditor/views/textEdit.dart';
 import 'package:texteditor/views/viewOnly.dart';
 
 class SharedDocuments extends StatefulWidget {
-  final bool isEditor;
   final String userId;
 
   const SharedDocuments({
     Key? key,
-    required this.isEditor,
     required this.userId,
   }) : super(key: key);
 
@@ -127,19 +125,27 @@ class _SharedDocumentsState extends State<SharedDocuments> {
                       }
                     },
                     trailing: PopupMenuButton<String>(
-                      itemBuilder: (context) => widget.isEditor
-                          ? [
-                              PopupMenuItem(
-                                value: 'Rename',
-                                child: Text('Rename'),
-                              ),
-                              PopupMenuItem(
-                                value: 'Share',
-                                child: Text('Share'),
-                              ),
-                              // Add more options as needed
-                            ]
-                          : [],
+                      itemBuilder: (context) {
+                        if (!viewerDocuments.contains(document)) {
+                          return [
+                            PopupMenuItem(
+                              value: 'Rename',
+                              child: Text('Rename'),
+                            ),
+                            PopupMenuItem(
+                              value: 'Share',
+                              child: Text('Share'),
+                            ),
+                          ];
+                        } else {
+                          return [
+                            PopupMenuItem(
+                              value: 'Rename',
+                              child: Text('Rename'),
+                            ),
+                          ];
+                        }
+                      },
                       onSelected: (value) {
                         if (value == 'Share') {
                           showDialog(

@@ -1,137 +1,11 @@
 {
 	"info": {
-		"_postman_id": "67098fce-28db-4043-b4e8-bd605bdb8ab3",
+		"_postman_id": "07edd439-99c6-4431-8963-8c85c2e360d7",
 		"name": "Document",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "19995406"
+		"_exporter_id": "32069311"
 	},
 	"item": [
-		{
-			"name": "Add Document",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "userId",
-						"value": "6633742c11cf8763d7b4b5f3",
-						"uuid": "40e01f5f-92c0-40b4-bf2f-0a60baff5877"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"documentName\":\"Document\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/document/add",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"document",
-						"add"
-					]
-				}
-			},
-			"response": [
-				{
-					"name": "200 Added A Doucment",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"documentName\":\"Example2\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://localhost:8080/document/add",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"document",
-								"add"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						},
-						{
-							"key": "Transfer-Encoding",
-							"value": "chunked"
-						},
-						{
-							"key": "Date",
-							"value": "Sun, 28 Apr 2024 18:49:35 GMT"
-						},
-						{
-							"key": "Keep-Alive",
-							"value": "timeout=60"
-						},
-						{
-							"key": "Connection",
-							"value": "keep-alive"
-						}
-					],
-					"cookie": [],
-					"body": "{\n    \"document\": {\n        \"id\": \"662e9a3f6086145402e6e7a3\",\n        \"name\": \"Example2\",\n        \"content\": null,\n        \"ownerId\": null,\n        \"sharedWith\": null\n    },\n    \"message\": \"Document added successfully\"\n}"
-				}
-			]
-		},
-		{
-			"name": "Update Document",
-			"request": {
-				"method": "PUT",
-				"header": [
-					{
-						"key": "userId",
-						"value": "6633742c11cf8763d7b4b5f3",
-						"uuid": "4d26718e-fdce-4fbf-acc8-c30be489b338"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"id\":\"6633ad108901bd48cf18bb60\",\r\n    \"documentName\": \"new document name\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/document/update",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"document",
-						"update"
-					]
-				}
-			},
-			"response": []
-		},
 		{
 			"name": "Delete Document",
 			"request": {
@@ -139,13 +13,13 @@
 				"header": [
 					{
 						"key": "userId",
-						"value": "6633742c11cf8763d7b4b5f3",
-						"uuid": "54b862b2-1b51-4520-9ae6-351ea2feb1f7"
+						"value": "662efd374da8dd06c9452ef5",
+						"type": "text"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"id\":\"6633ac2f2eb3ef000c0e5050\"\r\n}",
+					"raw": "{\r\n    \"documentName\":\"test2\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -266,22 +140,19 @@
 			]
 		},
 		{
-			"name": "Get Document",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
+			"name": "Add Document",
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [
 					{
 						"key": "userId",
-						"value": "6633742c11cf8763d7b4b5f3",
-						"uuid": "959c9507-aa55-4a10-b964-98e2aab19751"
+						"value": "6642addacc0c75563c67a609",
+						"type": "text"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"id\":\"6633adaa8901bd48cf18bb61\"\r\n}",
+					"raw": "{\r\n    \"documentName\":\"example2\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -289,7 +160,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/document/get",
+					"raw": "http://localhost:8080/document/add",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -297,7 +168,187 @@
 					"port": "8080",
 					"path": [
 						"document",
-						"get"
+						"add"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 Added A Doucment",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"documentName\":\"Example2\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/document/add",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"document",
+								"add"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Transfer-Encoding",
+							"value": "chunked"
+						},
+						{
+							"key": "Date",
+							"value": "Sun, 28 Apr 2024 18:49:35 GMT"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=60"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"document\": {\n        \"id\": \"662e9a3f6086145402e6e7a3\",\n        \"name\": \"Example2\",\n        \"content\": null,\n        \"ownerId\": null,\n        \"sharedWith\": null\n    },\n    \"message\": \"Document added successfully\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Get User Documents",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "userId",
+						"value": "662efd374da8dd06c9452ef5",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/document/user/owns",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"document",
+						"user",
+						"owns"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Document",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "userId",
+						"value": "662efd374da8dd06c9452ef5",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"documentName\": \"Test\",\r\n    \"newDocumentName\": \"newTest\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/document/update",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"document",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Share Document",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "userId",
+						"value": "6642addacc0c75563c67a609",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"documentName\": \"example2\",\r\n    \"username\": \"Ziad\",\r\n    \"role\": \"viewer\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/document/share",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"document",
+						"share"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Shared Documents",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "userId",
+						"value": "6642ae33cc0c75563c67a60b",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/document/user/shared",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"document",
+						"user",
+						"shared"
 					]
 				}
 			},
