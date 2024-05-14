@@ -4,30 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:texteditor/Components/shareDialog.dart';
 import 'package:texteditor/Components/sharedDocument.dart';
+import 'package:texteditor/models/Document.dart';
 import 'package:texteditor/views/textEdit.dart';
 import 'package:http/http.dart' as http;
 
 import 'login.dart';
-
-class Document {
-  final String id;
-  String name;
-  final String owner;
-  final bool isOwnedByUser;
-
-  Document({
-    required this.id,
-    required this.name,
-    required this.owner,
-    required this.isOwnedByUser,
-    //this.isEditor = true,
-  });
-
-  @override
-  String toString() {
-    return 'Document(id: $id, name: $name, owner: $owner, isOwnedByUser: $isOwnedByUser)';
-  }
-}
 
 class FileManagementPage extends StatefulWidget {
   final String id;
@@ -45,7 +26,11 @@ class _FileManagementPageState extends State<FileManagementPage> {
 
   List<Document> ownedDocuments = [];
 
-  final List<Document> sharedDocuments = [
+  final List<Document> editorDocuments = [
+    Document(
+        id: "2", name: 'Document 2', owner: 'User 2', isOwnedByUser: false),
+  ];
+  final List<Document> viewerDocuments = [
     Document(
         id: "2", name: 'Document 2', owner: 'User 2', isOwnedByUser: false),
   ];
@@ -363,7 +348,10 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
-                                          return ShareDocumentDialog();
+                                          return ShareDocumentDialog(
+                                              userId: widget.id,
+                                              documentName:
+                                                  ownedDocuments[index].name);
                                         },
                                       );
                                     }
@@ -378,8 +366,7 @@ class _FileManagementPageState extends State<FileManagementPage> {
                   ),
                 ),
                 SizedBox(width: 50),
-                SharedDocuments(
-                    sharedDocuments: sharedDocuments, isEditor: isEditor),
+                SharedDocuments(userId: widget.id, isEditor: isEditor),
               ],
             ),
           ],
