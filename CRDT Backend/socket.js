@@ -38,14 +38,16 @@ io.on("connection", async (socket) => {
   const user_id = socket.handshake.query.id;
   const document_id = socket.handshake.query.documentId;
   console.log("ANA FL SOCKETS");
-  console.log(user_id);
+  console.log(document_id);
   const documentToAdd = await Document.findById(document_id);
+  console.log("Document to add: ", documentToAdd);
   if (!crdtMap[documentToAdd._id]) {
     if (documentToAdd.crdt) {
       console.log("el document el da5el Document CRDT: ", documentToAdd.crdt);
       crdtMap[documentToAdd._id] = documentToAdd.crdt;
     } else {
       crdtMap[documentToAdd._id] = new CRDT();
+      console.log("Documentttttttttt CRDT: ", crdtMap);
     }
   } else {
   }
@@ -111,23 +113,17 @@ io.on("connection", async (socket) => {
   ////////////////////////////////////////////////////////////////////////////////
   /////////////////////////LOCAL FORMAT///////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
-  socket.on("localFormat", (character) => {
-    console.log("Received local insert operation: ", character);
-    if (crdtMap[document_id]) {
-      crdtMap[document_id].struct.push(character);
-      console.log("Document CRDT: ", crdtMap[document_id]);
-      crdtMap[document_id].struct.sort((a, b) => {
-        const digitA = parseInt(a.digit);
-        const digitB = parseInt(b.digit);
-        return digitA - digitB;
-      });
-      checkSpan(crdtMap[document_id].struct);
-      console.log("Document CRDT: ", crdtMap[document_id]);
+  socket.on("localFormat", (characters) => {
+    console.log("Received local format operation: ", characters);
+    for (let character of characters) {
+      if (crdtMap[document_id]) {
+        const index = crdtMap[document_id].struct.findIndex(
+          (char) => char.digit === character.digit
+        );
+        crdtMap[document_id].struct[index].bold = character.bold;
+        crdtMap[document_id].struct[index].italic = character.italic;
+      }
     }
-    //TODO: LAW el document msh mawgood fel map
-    // crdt.localInsert(character.value, character.);
-    // socket.broadcast.emit("remoteInsert", character);
-    socket.in(document_id).emit("remoteInsert", character);
   });
   socket.on("disconnect", async () => {
     console.log("user disconnected", socket.id);
@@ -162,36 +158,6 @@ io.on("connection", async (socket) => {
     console.log("User Document MAP", userDocumentMap);
     console.log("Socket User MAP", socketUser);
     console.log("CRDT MAP: ", crdtMap);
-
-    // userSocketMap.get(document_id).delete(user_id);
-    //TODO: EL 7ETA DEH HATBOOOOZ
-    // let userId;
-    // for (let [docId, innerUserSocketMap] of userSocketMap.entries()) {
-    //   for (let [uId, sId] of userSocketMap.entries()) {
-    //     if (sId === socket.id) {
-    //       userId = uId;
-    //       break;
-    //     }
-    //   }
-    //   if (userId) break;
-    // }
-    // let documentId = userDocumentMap.get(userId);
-
-    // console.log(`User ${userId} disconnected from document ${documentId}`);
-    // userSocketMap.get(documentId).delete(userId);
-    // userDocumentMap.delete(userId);
-    // if (userSocketMap.get(document_id).size === 0) {
-    //   console.log("No users in the room");
-    //   let documentId = userSocketMap.get(user_id); // Get the document ID
-    //   const document = await Document.findById(document_id);
-    //   console.log("Document : ", document);
-    //   if (document) {
-    //     document.crdt = crdtMap[document_id];
-    //     await document.save();
-    //   } else {
-    //     console.log("Document not found");
-    //   }
-    // }
   });
 });
 
