@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:texteditor/Components/remoteCursor.dart';
 import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
@@ -41,6 +42,11 @@ class _TextEditState extends State<TextEdit> {
   int isCaps = 0;
   String previousCharacter = '';
   String get documentId => widget.documentId;
+
+  // Add a map to store the cursor positions of all users in the document (siteId -> cursor position)
+  // holds userIDs and their cursor positions
+  Map<String, int> cursorPositions = {};
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +69,27 @@ class _TextEditState extends State<TextEdit> {
     } catch (e) {
       print("error: $e");
     }
+
+    // Add a listener to the text controller to track cursor position changes
+    _controller.addListener(() {
+      if (_controller.selection.start != _cursorPosition) {
+        _cursorPosition = _controller.selection.start;
+        socket.emit(
+            'cursorPosition', {'id': widget.id, 'position': _cursorPosition});
+      }
+      // final cursorPosition = _controller.selection.start;
+      // if (cursorPositions[widget.id] != cursorPosition) {
+      //   cursorPositions[widget.id] = cursorPosition;
+      //   // TODO: Send cursorPosition to the server
+      // }
+    });
+
+    // Step 3: Receive cursor position updates from the server
+    socket.on('cursorPosition', (data) {
+      setState(() {
+        cursorPositions[data['id']] = data['position'];
+      });
+    });
 
     _previousText = _controller.document.toPlainText();
     _autosaveTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
@@ -146,8 +173,11 @@ class _TextEditState extends State<TextEdit> {
     String value = result.value;
     // Insert the character at the correct position in the text controller
     print("CRDT After remote insert: ${crdt.struct}");
-    // Apply formatting based on the isBold and isItalic flags
+    // Update the cursor positions map when a remote insert occurs
+    cursorPositions
+        .updateAll((key, value) => value >= index ? value + 1 : value);
 
+    // Apply formatting based on the isBold and isItalic flags
     if (char.bold == 1 && char.italic == 1) {
       _controller.replaceText(index, 0, value,
           TextSelection.collapsed(offset: index + value.length));
@@ -175,6 +205,9 @@ class _TextEditState extends State<TextEdit> {
       _controller.replaceText(indexofRemoval, 1, '',
           TextSelection.collapsed(offset: indexofRemoval));
     }
+    // Update the cursor positions map when a remote delete occurs
+    cursorPositions
+        .updateAll((key, value) => value >= indexofRemoval ? value - 1 : value);
   }
 
   // ignore: deprecated_member_use
@@ -199,6 +232,9 @@ class _TextEditState extends State<TextEdit> {
         isCaps = 1 - isCaps;
       } else {
         print("insideeee insert");
+        if (keyLabel.length > 1) {
+          return;
+        }
         // Handle other key presses (alphabets, numbers, etc.)
         operation = 'Insert';
         print("Element: $keyLabel");
@@ -232,65 +268,136 @@ class _TextEditState extends State<TextEdit> {
     return 0;
   }
 
+//   @override
+//   Widget build(BuildContext context) {
+//     return RawKeyboardListener(
+//       focusNode: FocusNode(),
+//       onKey: _handleKeyPress,
+//       child: SafeArea(
+//         child: Scaffold(
+//           appBar: AppBar(
+//             actions: [
+//               IconButton(
+//                 onPressed: () {
+//                   Navigator.pop(context);
+//                 },
+//                 icon: Icon(Icons.save),
+//               )
+//             ],
+//           ),
+//           body: Column(
+//             children: [
+//               Padding(
+//                 padding: const EdgeInsets.all(25.0),
+//                 child: QuillToolbar.simple(
+//                   configurations: QuillSimpleToolbarConfigurations(
+//                     controller: _controller,
+//                     sharedConfigurations: const QuillSharedConfigurations(
+//                       locale: Locale('en'),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               Expanded(
+//                 child: QuillEditor.basic(
+//                   configurations: QuillEditorConfigurations(
+//                     controller: _controller,
+//                     readOnly: false,
+//                     sharedConfigurations: const QuillSharedConfigurations(
+//                       locale: Locale('en'),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               Container(
+//                 width: 200,
+//                 child: ElevatedButton(
+//                   style: ElevatedButton.styleFrom(
+//                     minimumSize: const Size.fromHeight(50),
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(20),
+//                     ),
+//                   ),
+//                   onPressed: () {},
+//                   child: const Text("Save"),
+//                 ),
+//               ),
+//               const SizedBox(height: 20),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
   @override
-  Widget build(BuildContext context) {
-    return RawKeyboardListener(
-      focusNode: FocusNode(),
-      onKey: _handleKeyPress,
-      child: SafeArea(
-        child: Scaffold(
-          appBar: AppBar(
-            actions: [
-              IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: Icon(Icons.save),
-              )
-            ],
-          ),
-          body: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(25.0),
-                child: QuillToolbar.simple(
-                  configurations: QuillSimpleToolbarConfigurations(
-                    controller: _controller,
-                    sharedConfigurations: const QuillSharedConfigurations(
-                      locale: Locale('en'),
+Widget build(BuildContext context) {
+  return Stack(
+    children: [
+      RawKeyboardListener(
+        focusNode: FocusNode(),
+        onKey: _handleKeyPress,
+        child: SafeArea(
+          child: Scaffold(
+            appBar: AppBar(
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.save),
+                )
+              ],
+            ),
+            body: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(25.0),
+                  child: QuillToolbar.simple(
+                    configurations: QuillSimpleToolbarConfigurations(
+                      controller: _controller,
+                      sharedConfigurations: const QuillSharedConfigurations(
+                        locale: Locale('en'),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: QuillEditor.basic(
-                  configurations: QuillEditorConfigurations(
-                    controller: _controller,
-                    readOnly: false,
-                    sharedConfigurations: const QuillSharedConfigurations(
-                      locale: Locale('en'),
+                Expanded(
+                  child: QuillEditor.basic(
+                    configurations: QuillEditorConfigurations(
+                      controller: _controller,
+                      readOnly: false,
+                      sharedConfigurations: const QuillSharedConfigurations(
+                        locale: Locale('en'),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Container(
-                width: 200,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                Container(
+                  width: 200,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
+                    onPressed: () {},
+                    child: const Text("Save"),
                   ),
-                  onPressed: () {},
-                  child: const Text("Save"),
                 ),
-              ),
-              const SizedBox(height: 20),
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
+      ...cursorPositions.entries.map((entry) {
+        final position = calculateCursorOffset(_controller as TextEditingController, entry.value);
+        return RemoteCursorWidget(position: position, color: Colors.red); // Use a different color for each user
+      }).toList(),
+    ],
+  );
+}
 }
