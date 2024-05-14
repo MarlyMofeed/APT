@@ -25,9 +25,15 @@ const checkSpan = (struct) => {
 ////////////////////////////////////////////////////////////////////////////////
 const userSocketMap = new Map(); // {user_id: socketId}
 const crdtMap = {}; // {document_id: crdt}
+let userDocumentMap = new Map(); // Maps userId to documentId
 // const documentMembersMap = {}; // {document_id: [user_id]}
 io.on("connection", async (socket) => {
-  console.log("a user connected", socket.id);
+  console.log(
+    "a user connected",
+    socket.id,
+    "3al document",
+    socket.handshake.query.documentId
+  );
   const user_id = socket.handshake.query.id;
   const document_id = socket.handshake.query.documentId;
   console.log("ANA FL SOCKETS");
@@ -35,6 +41,8 @@ io.on("connection", async (socket) => {
   if (!crdtMap[document_id]) {
     crdtMap[document_id] = new CRDT();
   }
+  userDocumentMap.set(user_id, document_id);
+
   // if (!documentMembersMap[document_id]) {
   //   documentMembersMap[document_id] = 1;
   // } else {
@@ -49,6 +57,7 @@ io.on("connection", async (socket) => {
 
   // userSocketMap[user_id] = socket.id;
   console.log("User MAP", userSocketMap);
+  console.log("User Document MAP", userDocumentMap);
   console.log("CRDT MAP: ", crdtMap);
   socket.join(document_id);
   console.log("user joined room: ", document_id);
@@ -87,19 +96,24 @@ io.on("connection", async (socket) => {
     // delete userSocketMap[user_id];
     userSocketMap.get(document_id).delete(user_id);
     //TODO: EL 7ETA DEH HATBOOOOZ
+    let userId = socketUserMap.get(socket.id);
+    let documentId = userDocumentMap.get(userId);
 
-    if (userSocketMap.get(document_id).size === 0) {
-      console.log("No users in the room");
-      let documentId = userSocketMap.get(user_id); // Get the document ID
-      const document = await Document.findById(document_id);
-      console.log("Document : ", document);
-      if (document) {
-        document.crdt = crdtMap[document_id];
-        await document.save();
-      } else {
-        console.log("Document not found");
-      }
-    }
+    console.log(`User ${userId} disconnected from document ${documentId}`);
+    socketUserMap.delete(socket.id);
+    userDocumentMap.delete(userId);
+    // if (userSocketMap.get(document_id).size === 0) {
+    //   console.log("No users in the room");
+    //   let documentId = userSocketMap.get(user_id); // Get the document ID
+    //   const document = await Document.findById(document_id);
+    //   console.log("Document : ", document);
+    //   if (document) {
+    //     document.crdt = crdtMap[document_id];
+    //     await document.save();
+    //   } else {
+    //     console.log("Document not found");
+    //   }
+    // }
   });
 });
 
