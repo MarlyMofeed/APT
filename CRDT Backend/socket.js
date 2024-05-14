@@ -13,9 +13,9 @@ const io = new Server(server, {
   },
 });
 const crdt = new CRDT();
-const getReceiverSocketId = (receiverId) => {
-  return userSocketMap[receiverId];
-};
+// const getReceiverSocketId = (receiverId) => {
+//   return userSocketMap[receiverId];
+// };
 ////////////////////////////////////////////////////////////////////////////////
 const checkSpan = (struct) => {
   if (struct[struct.length - 1].digit - struct[struct.length - 2].digit <= 1) {
@@ -23,58 +23,57 @@ const checkSpan = (struct) => {
   }
 };
 ////////////////////////////////////////////////////////////////////////////////
-const userSocketMap = new Map(); // {user_id: socketId}
-const crdtMap = {}; // {document_id: crdt}
-const socketUser = {}; //{socketId: userId}
-let userDocumentMap = new Map(); // Maps userId to documentId
+// const userSocketMap = new Map(); // {user_id: socketId}
+const crdtMap = new Map(); // {document_id: crdt}
+// const socketUser = {}; //{socketId: userId}
+// let userDocumentMap = new Map(); // Maps userId to documentId
 // const documentMembersMap = {}; // {document_id: [user_id]}
-io.on("connection", async (socket) => {
-  console.log(
-    "a user connected",
-    socket.id,
-    "3al document",
-    socket.handshake.query.documentId
-  );
+io.on("connect", async (socket) => {
+  // console.log(
+  //   "a user connected",
+  //   socket.id,
+  //   "3al document",
+  //   socket.handshake.query.documentId
+  // );
   const user_id = socket.handshake.query.id;
   const document_id = socket.handshake.query.documentId;
-  console.log("ANA FL SOCKETS");
   console.log(socket.handshake.query.documentId);
   console.log(document_id);
-  const documentToAdd = await Document.findById(document_id);
-  console.log("Document to add: ", documentToAdd);
-  if (!crdtMap[documentToAdd._id]) {
+
+  if (crdtMap.has(document_id)) {
+    console.log("Document Already Exists in Memory");
+    // console.log("el document el da5el Document CRDT: ", documentToAdd.crdt);
+    // crdtMap[documentToAdd._id] = documentToAdd.crdt;
+    // crdtMap[document_id._id] = new CRDT();
+    // crdtMap[document_id._id].struct = document_id.crdt;
+    // else {
+    // crdtMap[documentToAdd._id] = new CRDT();
+    // }
+  } else {
+    console.log("Loading Document from Database");
+    const documentToAdd = await Document.findById(document_id);
     if (documentToAdd.crdt.length > 0) {
-      // console.log("el document el da5el Document CRDT: ", documentToAdd.crdt);
-      // crdtMap[documentToAdd._id] = documentToAdd.crdt;
-      crdtMap[documentToAdd._id] = new CRDT();
-      crdtMap[documentToAdd._id].struct = documentToAdd.crdt;
+      console.log("el crdt bta3et el document feeha data");
+      let crdt = new CRDT();
+      crdt.struct = documentToAdd.crdt;
+      crdtMap.set(document_id, crdt);
     } else {
-      console.log("Ana hena ya gama3a");
-      crdtMap[documentToAdd._id] = new CRDT();
-      console.log("Documentttttttttt CRDT: ", crdtMap);
+      console.log("el crdt bta3et el document fadya");
+      let crdt = new CRDT();
+      crdtMap.set(document_id, crdt);
     }
-  } else {
   }
-  userDocumentMap.set(user_id, document_id);
-  socketUser[socket.id] = user_id;
-  // if (!documentMembersMap[document_id]) {
-  //   documentMembersMap[document_id] = 1;
-  // } else {
-  //   documentMembersMap[document_id]++;
-  // }
-  if (!userSocketMap.has(document_id)) {
-    userSocketMap.set(document_id, new Map());
-    userSocketMap.get(document_id).set(user_id, socket.id);
-  } else {
-    userSocketMap.get(document_id).set(user_id, socket.id);
-  }
+  console.log("Document CRDT 5ARA: ", crdtMap);
+  console.log("Document CRDT: ", crdtMap.get(document_id));
+  console.log("Sending Document to User");
+  socket.emit("receiveDocument", crdtMap.get(document_id).struct);
   socket.join(document_id);
-  console.log("user joined room: ", document_id);
+  // console.log("user joined room: ", document_id);
 
   // userSocketMap[user_id] = socket.id;
-  console.log("User Socket MAP", userSocketMap);
-  console.log("User Document MAP", userDocumentMap);
-  console.log("Socket User MAP", socketUser);
+  // console.log("User Socket MAP", userSocketMap);
+  // console.log("User Document MAP", userDocumentMap);
+  // console.log("Socket User MAP", socketUser);
   console.log("CRDT MAP: ", crdtMap);
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -150,16 +149,16 @@ io.on("connection", async (socket) => {
     // userSocketMap.get(document_id).set(user_id, socket.id);
     console.log("user disconnected", socket.id);
     // delete userSocketMap[user_id];
-    let userId = socketUser[socket.id];
-    let documentId = userDocumentMap.get(userId);
-    console.log(`User ${userId} disconnected from document ${documentId}`);
-    userSocketMap.get(documentId).delete(userId);
-    userDocumentMap.delete(userId);
+    // let userId = socketUser[socket.id];
+    // let documentId = userDocumentMap.get(userId);
+    // console.log(`User ${userId} disconnected from document ${documentId}`);
+    // userSocketMap.get(documentId).delete(userId);
+    // userDocumentMap.delete(userId);
     //remove the respective entry from the socketUser map
-    delete socketUser[socket.id];
-    if (userSocketMap.get(document_id).size === 0) {
+    // delete socketUser[socket.id];
+    if (io.sockets.adapter.rooms[document_id] === 0) {
       console.log("No users in the room");
-      userSocketMap.delete(document_id);
+      // userSocketMap.delete(document_id);
       const document = await Document.findById(document_id);
       console.log("Document : ", document);
       if (document) {
@@ -174,13 +173,13 @@ io.on("connection", async (socket) => {
     }
     // socket.disconnect();
     //remove the respective entry from the socketUser map
-    delete socketUser[socket.id];
+    // delete socketUser[socket.id];
 
-    console.log("User Socket MAP", userSocketMap);
-    console.log("User Document MAP", userDocumentMap);
-    console.log("Socket User MAP", socketUser);
+    // console.log("User Socket MAP", userSocketMap);
+    // console.log("User Document MAP", userDocumentMap);
+    // console.log("Socket User MAP", socketUser);
     console.log("CRDT MAP: ", crdtMap);
   });
 });
 
-module.exports = { app, io, server, getReceiverSocketId };
+module.exports = { app, io, server };
