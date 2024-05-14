@@ -323,4 +323,39 @@ public class DocumentController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/share")
+    public ResponseEntity<Map<String, Object>> shareDocument(@RequestHeader("userId") String userId,
+            @RequestBody Map<String, String> body) {
+        String documentName = body.get("documentName");
+        String username = body.get("username");
+        String role = body.get("role");
+        Map<String, Object> response = new HashMap<>();
+
+        User userToShareWith = userRepository.findByUsername(username);
+        if (userToShareWith == null) {
+            response.put("message", "User not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        Documents document = documentRepository.findByNameAndOwnerId(documentName, userId);
+        if (document == null) {
+            response.put("message", "Document not found or not owned by the current user");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        if (role.equals("editor")) {
+            userToShareWith.getEditorDocumentIds().add(document.getId());
+        } else if (role.equals("viewer")) {
+            userToShareWith.getViewerDocumentIds().add(document.getId());
+        } else {
+            response.put("message", "Invalid role");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        userRepository.save(userToShareWith);
+
+        response.put("message", "Document shared successfully");
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
 }
