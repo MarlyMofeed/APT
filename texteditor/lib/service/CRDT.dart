@@ -4,8 +4,8 @@ class Identifier {
   String value;
   double digit;
   String siteId;
-  int bold=0;
-  int italic=0;
+  int bold = 0;
+  int italic = 0;
 
   Identifier(this.value, this.digit, this.siteId, this.bold, this.italic);
 
@@ -30,8 +30,8 @@ class CRDT {
   List<Identifier> struct = [];
 
   CRDT() {
-    struct.add(Identifier('\0', -2000, Uuid().v4(),0,0));
-    struct.add(Identifier('\0', 2000, Uuid().v4(),0,0));
+    struct.add(Identifier('\0', -2000, Uuid().v4(), 0, 0));
+    struct.add(Identifier('\0', 2000, Uuid().v4(), 0, 0));
   }
 
   Identifier generateChar(String val, int index, int bold, int italic) {
@@ -42,13 +42,14 @@ class CRDT {
     print("POS BEFORE: $posBefore");
     print("POS AFTER: $posAfter");
     var siteId = Uuid().v4();
-    Identifier newPos = generatePosBetween(val, posBefore, posAfter, siteId, bold, italic);
+    Identifier newPos =
+        generatePosBetween(val, posBefore, posAfter, siteId, bold, italic);
 
     return newPos;
   }
 
-  Identifier generatePosBetween(
-      String value, Identifier? pos1, Identifier? pos2, String siteId, int bold, int italic) {
+  Identifier generatePosBetween(String value, Identifier? pos1,
+      Identifier? pos2, String siteId, int bold, int italic) {
     // Identifier id1 = pos1.isNotEmpty ? pos1[0] : Identifier(0, siteId);
     // Identifier id2 = pos2.isNotEmpty
     // ? pos2[0]
@@ -87,11 +88,15 @@ class CRDT {
   }
 
   Identifier localDelete(int index) {
-    if (index < 0 || index >= struct.length) {
-      throw RangeError('index out of range');
-    }
-    Identifier char = struct.removeAt(index);
-    return char;
+    // if (index < 0 || index >= struct.length) {
+    //   throw RangeError('index out of range');
+    // }
+    // Identifier char = struct.removeAt(index);
+    // return char;
+    Identifier charToRemove = struct[index];
+    print("Gowa el delete: $charToRemove");
+    struct.remove(charToRemove);
+    return charToRemove;
   }
 
   Identifier remoteInsert(Identifier char) {
@@ -103,14 +108,21 @@ class CRDT {
   int findIndex(List<Identifier> struct, Identifier target) {
     return struct.indexWhere((identifier) => identifier == target);
   }
-  // int remoteDelete(Map<String, dynamic> char) {
+
+  // Identifier remoteDelete(Identifier char) {
   //   int index = findIndexByPosition(char);
   //   if (index != -1) {
   //     struct.removeAt(index);
   //   }
-  //   return index;
+  //   return char;
   // }
-
+  int remoteDelete(Identifier char) {
+    int index = findIndexByPosition(char);
+    if (index != -1) {
+      struct.removeAt(index);
+    }
+    return index;
+  }
   // int findInsertIndex(Map<String, dynamic> char) {
   //   int low = 0;
   //   int high = struct.length;
@@ -129,28 +141,17 @@ class CRDT {
   //   return low;
   // }
 
-  // int findIndexByPosition(Map<String, dynamic> char) {
-  //   int low = 0;
-  //   int high = struct.length;
-
-  //   while (low < high) {
-  //     int mid = ((low + high) / 2).floor();
-  //     Map<String, dynamic> currentChar = struct[mid];
-
-  //     int comparison =
-  //         comparePositions(char['position'], currentChar['position']);
-  //     if (comparison == 0) {
-  //       return mid;
-  //     } else if (comparison < 0) {
-  //       high = mid;
-  //     } else {
-  //       low = mid + 1;
-  //     }
-  //   }
-
-  //   // If the character is not found, return -1
-  //   return -1;
-  // }
+  int findIndexByPosition(Identifier char) {
+    if (struct.isEmpty) {
+      return -1;
+    }
+    int index =
+        struct.indexWhere((identifier) => identifier.digit == char.digit);
+    if (index == -1) {
+      return -1;
+    }
+    return index;
+  }
 
   // int comparePositions(List<Identifier> pos1, List<Identifier> pos2) {
   //   for (int i = 0; i < pos1.length; i++) {
