@@ -38,14 +38,18 @@ io.on("connection", async (socket) => {
   const user_id = socket.handshake.query.id;
   const document_id = socket.handshake.query.documentId;
   console.log("ANA FL SOCKETS");
+  console.log(socket.handshake.query.documentId);
   console.log(document_id);
   const documentToAdd = await Document.findById(document_id);
   console.log("Document to add: ", documentToAdd);
   if (!crdtMap[documentToAdd._id]) {
-    if (documentToAdd.crdt) {
-      console.log("el document el da5el Document CRDT: ", documentToAdd.crdt);
-      crdtMap[documentToAdd._id] = documentToAdd.crdt;
+    if (documentToAdd.crdt.length > 0) {
+      // console.log("el document el da5el Document CRDT: ", documentToAdd.crdt);
+      // crdtMap[documentToAdd._id] = documentToAdd.crdt;
+      crdtMap[documentToAdd._id] = new CRDT();
+      crdtMap[documentToAdd._id].struct = documentToAdd.crdt;
     } else {
+      console.log("Ana hena ya gama3a");
       crdtMap[documentToAdd._id] = new CRDT();
       console.log("Documentttttttttt CRDT: ", crdtMap);
     }
@@ -79,6 +83,7 @@ io.on("connection", async (socket) => {
   socket.on("localInsert", (character) => {
     console.log("Received local insert operation: ", character);
     if (crdtMap[document_id]) {
+      console.log("bada5al fi dah: ", crdtMap[document_id]);
       crdtMap[document_id].struct.push(character);
       console.log("Document CRDT: ", crdtMap[document_id]);
       crdtMap[document_id].struct.sort((a, b) => {
@@ -113,19 +118,36 @@ io.on("connection", async (socket) => {
   ////////////////////////////////////////////////////////////////////////////////
   /////////////////////////LOCAL FORMAT///////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
-  socket.on("localFormat", (characters) => {
-    console.log("Received local format operation: ", characters);
-    for (let character of characters) {
-      if (crdtMap[document_id]) {
-        const index = crdtMap[document_id].struct.findIndex(
-          (char) => char.digit === character.digit
-        );
-        crdtMap[document_id].struct[index].bold = character.bold;
-        crdtMap[document_id].struct[index].italic = character.italic;
-      }
+  socket.on(
+    "localFormatting",
+    (character) => {
+      console.log("Received local format operation: ");
+      console.log("Identifiers: ", character);
+      // for (let character of identifiers) {
+      // console.log("Character To Format: ", character);
+      // if (crdtMap[document_id]) {
+      const index = crdtMap[document_id].struct.findIndex(
+        (char) => char.digit === character.digit
+      );
+      crdtMap[document_id].struct[index].bold = character.bold;
+      crdtMap[document_id].struct[index].italic = character.italic;
+      socket.in(document_id).emit("remoteFormatting", character);
+
+      // }
     }
-  });
+    // }
+  );
   socket.on("disconnect", async () => {
+    socket.leave(document_id);
+
+    // if (
+    //   userSocketMap.has(document_id) &&
+    //   userSocketMap.get(document_id).has(user_id)
+    // ) {
+    //   const oldSocketId = userSocketMap.get(document_id).get(user_id);
+    //   io.sockets.sockets.get(oldSocketId).disconnect();
+    // }
+    // userSocketMap.get(document_id).set(user_id, socket.id);
     console.log("user disconnected", socket.id);
     // delete userSocketMap[user_id];
     let userId = socketUser[socket.id];
@@ -150,7 +172,7 @@ io.on("connection", async (socket) => {
         console.log("Document not found");
       }
     }
-
+    // socket.disconnect();
     //remove the respective entry from the socketUser map
     delete socketUser[socket.id];
 

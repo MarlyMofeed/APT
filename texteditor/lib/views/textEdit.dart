@@ -41,7 +41,7 @@ class _TextEditState extends State<TextEdit> {
   late CRDT crdt;
   int isCaps = 0;
   String previousCharacter = '';
-  String get documentId => widget.documentId;
+  // String get documentId => widget.documentId;
   int previousStart = 0;
   int previousEnd = 0;
   int currentStart = 0;
@@ -55,16 +55,16 @@ class _TextEditState extends State<TextEdit> {
   void initState() {
     super.initState();
     _controller.addListener(_handleSelectionChange);
-    
+
     crdt = CRDT();
     // socket = IO.io('http://25.45.201.128:5000', <String, dynamic>{
     //   'transports': ['websocket'],
     //   'query': {'id': widget.id, 'documentId': documentId},
     // });
-    print("ha5osh el document ely esmo: $documentId");
+    print("ha5osh el document ely esmo: ${widget.documentId}");
     socket = IO.io('http://localhost:5000', <String, dynamic>{
       'transports': ['websocket'],
-      'query': {'id': widget.id, 'documentId': documentId},
+      'query': {'id': widget.id, 'documentId': widget.documentId},
     });
 
     socket.on('connect', (_) {
@@ -83,12 +83,12 @@ class _TextEditState extends State<TextEdit> {
     //     socket.emit(
     //         'cursorPosition', {'id': widget.id, 'position': _cursorPosition});
     //   }
-      // final cursorPosition = _controller.selection.start;
-      // if (cursorPositions[widget.id] != cursorPosition) {
-      //   cursorPositions[widget.id] = cursorPosition;
-      //   // TODO: Send cursorPosition to the server
-      // }
-   // });
+    // final cursorPosition = _controller.selection.start;
+    // if (cursorPositions[widget.id] != cursorPosition) {
+    //   cursorPositions[widget.id] = cursorPosition;
+    //   // TODO: Send cursorPosition to the server
+    // }
+    // });
 
     // Step 3: Receive cursor position updates from the server
     // socket.on('cursorPosition', (data) {
@@ -99,7 +99,7 @@ class _TextEditState extends State<TextEdit> {
 
     _previousText = _controller.document.toPlainText();
     _autosaveTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
-      _saveDocument(widget.id, documentId, _previousText);
+      _saveDocument(widget.id, widget.documentId, _previousText);
     });
     socket.on('disconnect', (_) => print('disconnected'));
     socket.on('error', (data) => print('error: $data'));
@@ -130,25 +130,24 @@ class _TextEditState extends State<TextEdit> {
     });
     socket.on('remoteFormatting', (data) {
       print("galy REMOTE FORMATTING");
-      List<Identifier> receivedChars = [];
-      for (int i = 0; i < data.length; i++) {
-        Identifier receivedChar = Identifier(
-          data[i]['value'],
-          data[i]['digit'].toDouble(),
-          data[i]['siteId'],
-          data[i]['bold'],
-          data[i]['italic'],
-        );
-        receivedChars.add(receivedChar);
-      }
-      handleRemoteFormatting(receivedChars);
+      // List<Identifier> receivedChars = [];
+      // for (int i = 0; i < data.length; i++) {
+      Identifier receivedChar = Identifier(
+        data['value'],
+        data['digit'].toDouble(),
+        data['siteId'],
+        data['bold'],
+        data['italic'],
+      );
+      // receivedChars.add(receivedChar);
+      // }
+      handleRemoteFormatting(receivedChar);
     });
   }
 
-
-
   @override
   void dispose() {
+    print("ana ba despoooozzzzzz");
     socket.disconnect();
     _autosaveTimer?.cancel();
     super.dispose();
@@ -233,30 +232,30 @@ class _TextEditState extends State<TextEdit> {
     //     .updateAll((key, value) => value >= indexofRemoval ? value - 1 : value);
   }
 
-  void handleRemoteFormatting(List<Identifier> identifiers) {
-    for (int i = 0; i < identifiers.length; i++) {
-      Identifier char = identifiers[i];
-      int index = crdt.findIndex(crdt.struct, char) - 1;
-      if (index != -1) {
-        if (char.bold == 1 && char.italic == 1) {
-      _controller.replaceText(index, 0, char.value,
-          TextSelection.collapsed(offset: index + char.value.length));
-      _controller.formatText(index, char.value.length, Attribute.bold);
-      _controller.formatText(index, char.value.length, Attribute.italic);
-    } else if (char.bold == 1) {
-      _controller.replaceText(index, 0, char.value,
-          TextSelection.collapsed(offset: index + char.value.length));
-      _controller.formatText(index, char.value.length, Attribute.bold);
-    } else if (char.italic == 1) {
-      _controller.replaceText(index, 0, char.value,
-          TextSelection.collapsed(offset: index + char.value.length));
-      _controller.formatText(index, char.value.length, Attribute.italic);
-    } else {
-      _controller.replaceText(index, 0, char.value,
-          TextSelection.collapsed(offset: index + char.value.length));
-    }
+  void handleRemoteFormatting(Identifier identifiers) {
+    // for (int i = 0; i < identifiers.length; i++) {
+    Identifier char = identifiers;
+    int index = crdt.findIndex(crdt.struct, char) - 1;
+    if (index != -1) {
+      if (char.bold == 1 && char.italic == 1) {
+        _controller.replaceText(index, 0, char.value,
+            TextSelection.collapsed(offset: index + char.value.length));
+        _controller.formatText(index, char.value.length, Attribute.bold);
+        _controller.formatText(index, char.value.length, Attribute.italic);
+      } else if (char.bold == 1) {
+        _controller.replaceText(index, 0, char.value,
+            TextSelection.collapsed(offset: index + char.value.length));
+        _controller.formatText(index, char.value.length, Attribute.bold);
+      } else if (char.italic == 1) {
+        _controller.replaceText(index, 0, char.value,
+            TextSelection.collapsed(offset: index + char.value.length));
+        _controller.formatText(index, char.value.length, Attribute.italic);
+      } else {
+        _controller.replaceText(index, 0, char.value,
+            TextSelection.collapsed(offset: index + char.value.length));
       }
     }
+    // }
   }
 
   // ignore: deprecated_member_use
@@ -301,56 +300,54 @@ class _TextEditState extends State<TextEdit> {
     }
   }
 
-  void getFormatChange()
-  {
-    if(currentStart == previousStart && currentEnd == previousEnd && currentStart!= currentEnd)
-    {
-        Style selectionStyle = _controller.getSelectionStyle();
-        Map<String, Attribute> attributes = selectionStyle.attributes;
-        bool isBold = attributes.containsKey('bold');
-        bool isItalic = attributes.containsKey('italic');
+  void getFormatChange() {
+    if (currentStart == previousStart &&
+        currentEnd == previousEnd &&
+        currentStart != currentEnd) {
+      Style selectionStyle = _controller.getSelectionStyle();
+      Map<String, Attribute> attributes = selectionStyle.attributes;
+      bool isBold = attributes.containsKey('bold');
+      bool isItalic = attributes.containsKey('italic');
 
-        print('Selected Text Format:');
-        print('Bold: $isBold');
-        print('Italic: $isItalic');
+      print('Selected Text Format:');
+      print('Bold: $isBold');
+      print('Italic: $isItalic');
 
-
-      List<Identifier> identifiers = List<Identifier>.filled(currentEnd - currentStart, Identifier('', 0, '0', 0, 0));
-      for(int i = currentStart; i < currentEnd; i++)
-      {
-        if(i < crdt.struct.length)
-        {
-          crdt.struct[i+1].bold = isBold ? 1 : 0;
-          crdt.struct[i+1].italic = isItalic ? 1 : 0;
-          identifiers[i - currentStart] = crdt.struct[i+1];
+      List<Identifier> identifiers = List<Identifier>.filled(
+          currentEnd - currentStart, Identifier('', 0, '0', 0, 0));
+      for (int i = currentStart; i < currentEnd; i++) {
+        if (i < crdt.struct.length) {
+          crdt.struct[i + 1].bold = isBold ? 1 : 0;
+          crdt.struct[i + 1].italic = isItalic ? 1 : 0;
+          identifiers[i - currentStart] = crdt.struct[i + 1];
         }
       }
       print(identifiers);
-      socket.emit('localFormatting', identifiers);
+      for (int i = 0; i < identifiers.length; i++) {
+        socket.emit('localFormatting', identifiers[i]);
+      }
     }
   }
 
   void _handleSelectionChange() {
-    
     if (_controller.selection.isValid) {
-    previousStart = currentStart;
-    previousEnd = currentEnd;
-    getSelectedTextIndices();
-    getFormatChange();
-
+      previousStart = currentStart;
+      previousEnd = currentEnd;
+      getSelectedTextIndices();
+      getFormatChange();
+    }
   }
+
+  void getSelectedTextIndices() {
+    TextSelection selection = _controller.selection;
+
+    int start = selection.start;
+    int end = selection.end;
+
+    print('Start: $start, End: $end');
+    currentStart = start;
+    currentEnd = end;
   }
-
-void getSelectedTextIndices() {
-  TextSelection selection = _controller.selection;
-
-  int start = selection.start;
-  int end = selection.end;
-
-  print('Start: $start, End: $end');
-  currentStart = start;
-  currentEnd = end;
-}
 
   int _isBoldSelected() {
     Attribute? attribute = _controller.getSelectionStyle().attributes['bold'];
@@ -405,7 +402,7 @@ void getSelectedTextIndices() {
                     showCursor: true,
                     readOnly: false,
                     sharedConfigurations: const QuillSharedConfigurations(
-                    locale: Locale('en'),
+                      locale: Locale('en'),
                     ),
                   ),
                 ),
