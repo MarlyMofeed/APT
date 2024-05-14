@@ -42,6 +42,10 @@ class _TextEditState extends State<TextEdit> {
   int isCaps = 0;
   String previousCharacter = '';
   String get documentId => widget.documentId;
+  int previousStart = 0;
+  int previousEnd = 0;
+  int currentStart = 0;
+  int currentEnd = 0;
 
   // Add a map to store the cursor positions of all users in the document (siteId -> cursor position)
   // holds userIDs and their cursor positions
@@ -50,6 +54,8 @@ class _TextEditState extends State<TextEdit> {
   @override
   void initState() {
     super.initState();
+    _controller.addListener(_handleSelectionChange);
+    
     crdt = CRDT();
     // socket = IO.io('http://25.45.201.128:5000', <String, dynamic>{
     //   'transports': ['websocket'],
@@ -71,25 +77,25 @@ class _TextEditState extends State<TextEdit> {
     }
 
     // Add a listener to the text controller to track cursor position changes
-    _controller.addListener(() {
-      if (_controller.selection.start != _cursorPosition) {
-        _cursorPosition = _controller.selection.start;
-        socket.emit(
-            'cursorPosition', {'id': widget.id, 'position': _cursorPosition});
-      }
+    // _controller.addListener(() {
+    //   if (_controller.selection.start != _cursorPosition) {
+    //     _cursorPosition = _controller.selection.start;
+    //     socket.emit(
+    //         'cursorPosition', {'id': widget.id, 'position': _cursorPosition});
+    //   }
       // final cursorPosition = _controller.selection.start;
       // if (cursorPositions[widget.id] != cursorPosition) {
       //   cursorPositions[widget.id] = cursorPosition;
       //   // TODO: Send cursorPosition to the server
       // }
-    });
+   // });
 
     // Step 3: Receive cursor position updates from the server
-    socket.on('cursorPosition', (data) {
-      setState(() {
-        cursorPositions[data['id']] = data['position'];
-      });
-    });
+    // socket.on('cursorPosition', (data) {
+    //   setState(() {
+    //     cursorPositions[data['id']] = data['position'];
+    //   });
+    // });
 
     _previousText = _controller.document.toPlainText();
     _autosaveTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
@@ -122,7 +128,24 @@ class _TextEditState extends State<TextEdit> {
       );
       handleRemoteDelete(receivedChar);
     });
+    socket.on('remoteFormatting', (data) {
+      print("galy REMOTE FORMATTING");
+      List<Identifier> receivedChars = [];
+      for (int i = 0; i < data.length; i++) {
+        Identifier receivedChar = Identifier(
+          data[i]['value'],
+          data[i]['digit'].toDouble(),
+          data[i]['siteId'],
+          data[i]['bold'],
+          data[i]['italic'],
+        );
+        receivedChars.add(receivedChar);
+      }
+      handleRemoteFormatting(receivedChars);
+    });
   }
+
+
 
   @override
   void dispose() {
@@ -174,8 +197,8 @@ class _TextEditState extends State<TextEdit> {
     // Insert the character at the correct position in the text controller
     print("CRDT After remote insert: ${crdt.struct}");
     // Update the cursor positions map when a remote insert occurs
-    cursorPositions
-        .updateAll((key, value) => value >= index ? value + 1 : value);
+    // cursorPositions
+    //     .updateAll((key, value) => value >= index ? value + 1 : value);
 
     // Apply formatting based on the isBold and isItalic flags
     if (char.bold == 1 && char.italic == 1) {
@@ -206,8 +229,34 @@ class _TextEditState extends State<TextEdit> {
           TextSelection.collapsed(offset: indexofRemoval));
     }
     // Update the cursor positions map when a remote delete occurs
-    cursorPositions
-        .updateAll((key, value) => value >= indexofRemoval ? value - 1 : value);
+    // cursorPositions
+    //     .updateAll((key, value) => value >= indexofRemoval ? value - 1 : value);
+  }
+
+  void handleRemoteFormatting(List<Identifier> identifiers) {
+    for (int i = 0; i < identifiers.length; i++) {
+      Identifier char = identifiers[i];
+      int index = crdt.findIndex(crdt.struct, char) - 1;
+      if (index != -1) {
+        if (char.bold == 1 && char.italic == 1) {
+      _controller.replaceText(index, 0, char.value,
+          TextSelection.collapsed(offset: index + char.value.length));
+      _controller.formatText(index, char.value.length, Attribute.bold);
+      _controller.formatText(index, char.value.length, Attribute.italic);
+    } else if (char.bold == 1) {
+      _controller.replaceText(index, 0, char.value,
+          TextSelection.collapsed(offset: index + char.value.length));
+      _controller.formatText(index, char.value.length, Attribute.bold);
+    } else if (char.italic == 1) {
+      _controller.replaceText(index, 0, char.value,
+          TextSelection.collapsed(offset: index + char.value.length));
+      _controller.formatText(index, char.value.length, Attribute.italic);
+    } else {
+      _controller.replaceText(index, 0, char.value,
+          TextSelection.collapsed(offset: index + char.value.length));
+    }
+      }
+    }
   }
 
   // ignore: deprecated_member_use
@@ -252,6 +301,57 @@ class _TextEditState extends State<TextEdit> {
     }
   }
 
+  void getFormatChange()
+  {
+    if(currentStart == previousStart && currentEnd == previousEnd && currentStart!= currentEnd)
+    {
+        Style selectionStyle = _controller.getSelectionStyle();
+        Map<String, Attribute> attributes = selectionStyle.attributes;
+        bool isBold = attributes.containsKey('bold');
+        bool isItalic = attributes.containsKey('italic');
+
+        print('Selected Text Format:');
+        print('Bold: $isBold');
+        print('Italic: $isItalic');
+
+
+      List<Identifier> identifiers = List<Identifier>.filled(currentEnd - currentStart, Identifier('', 0, '0', 0, 0));
+      for(int i = currentStart; i < currentEnd; i++)
+      {
+        if(i < crdt.struct.length)
+        {
+          crdt.struct[i+1].bold = isBold ? 1 : 0;
+          crdt.struct[i+1].italic = isItalic ? 1 : 0;
+          identifiers[i - currentStart] = crdt.struct[i+1];
+        }
+      }
+      print(identifiers);
+      socket.emit('localFormatting', identifiers);
+    }
+  }
+
+  void _handleSelectionChange() {
+    
+    if (_controller.selection.isValid) {
+    previousStart = currentStart;
+    previousEnd = currentEnd;
+    getSelectedTextIndices();
+    getFormatChange();
+
+  }
+  }
+
+void getSelectedTextIndices() {
+  TextSelection selection = _controller.selection;
+
+  int start = selection.start;
+  int end = selection.end;
+
+  print('Start: $start, End: $end');
+  currentStart = start;
+  currentEnd = end;
+}
+
   int _isBoldSelected() {
     Attribute? attribute = _controller.getSelectionStyle().attributes['bold'];
     if (attribute != null) {
@@ -268,136 +368,137 @@ class _TextEditState extends State<TextEdit> {
     return 0;
   }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return RawKeyboardListener(
-//       focusNode: FocusNode(),
-//       onKey: _handleKeyPress,
-//       child: SafeArea(
-//         child: Scaffold(
-//           appBar: AppBar(
-//             actions: [
-//               IconButton(
-//                 onPressed: () {
-//                   Navigator.pop(context);
-//                 },
-//                 icon: Icon(Icons.save),
-//               )
-//             ],
-//           ),
-//           body: Column(
-//             children: [
-//               Padding(
-//                 padding: const EdgeInsets.all(25.0),
-//                 child: QuillToolbar.simple(
-//                   configurations: QuillSimpleToolbarConfigurations(
-//                     controller: _controller,
-//                     sharedConfigurations: const QuillSharedConfigurations(
-//                       locale: Locale('en'),
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//               Expanded(
-//                 child: QuillEditor.basic(
-//                   configurations: QuillEditorConfigurations(
-//                     controller: _controller,
-//                     readOnly: false,
-//                     sharedConfigurations: const QuillSharedConfigurations(
-//                       locale: Locale('en'),
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//               Container(
-//                 width: 200,
-//                 child: ElevatedButton(
-//                   style: ElevatedButton.styleFrom(
-//                     minimumSize: const Size.fromHeight(50),
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(20),
-//                     ),
-//                   ),
-//                   onPressed: () {},
-//                   child: const Text("Save"),
-//                 ),
-//               ),
-//               const SizedBox(height: 20),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
   @override
-Widget build(BuildContext context) {
-  return Stack(
-    children: [
-      RawKeyboardListener(
-        focusNode: FocusNode(),
-        onKey: _handleKeyPress,
-        child: SafeArea(
-          child: Scaffold(
-            appBar: AppBar(
-              actions: [
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(Icons.save),
-                )
-              ],
-            ),
-            body: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(25.0),
-                  child: QuillToolbar.simple(
-                    configurations: QuillSimpleToolbarConfigurations(
-                      controller: _controller,
-                      sharedConfigurations: const QuillSharedConfigurations(
-                        locale: Locale('en'),
-                      ),
+  Widget build(BuildContext context) {
+    return RawKeyboardListener(
+      focusNode: FocusNode(),
+      onKey: _handleKeyPress,
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            actions: [
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Icon(Icons.save),
+              )
+            ],
+          ),
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(25.0),
+                child: QuillToolbar.simple(
+                  configurations: QuillSimpleToolbarConfigurations(
+                    controller: _controller,
+                    sharedConfigurations: const QuillSharedConfigurations(
+                      locale: Locale('en'),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: QuillEditor.basic(
-                    configurations: QuillEditorConfigurations(
-                      controller: _controller,
-                      readOnly: false,
-                      sharedConfigurations: const QuillSharedConfigurations(
-                        locale: Locale('en'),
-                      ),
+              ),
+              Expanded(
+                child: QuillEditor.basic(
+                  configurations: QuillEditorConfigurations(
+                    controller: _controller,
+                    showCursor: true,
+                    readOnly: false,
+                    sharedConfigurations: const QuillSharedConfigurations(
+                    locale: Locale('en'),
                     ),
                   ),
                 ),
-                Container(
-                  width: 200,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+              ),
+              Container(
+                width: 200,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    onPressed: () {},
-                    child: const Text("Save"),
                   ),
+                  onPressed: () {},
+                  child: const Text("Save"),
                 ),
-                const SizedBox(height: 20),
-              ],
-            ),
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
         ),
       ),
-      ...cursorPositions.entries.map((entry) {
-        final position = calculateCursorOffset(_controller as TextEditingController, entry.value);
-        return RemoteCursorWidget(position: position, color: Colors.red); // Use a different color for each user
-      }).toList(),
-    ],
-  );
+    );
+  }
 }
-}
+
+//   @override
+// Widget build(BuildContext context) {
+//   return Stack(
+//     children: [
+//       RawKeyboardListener(
+//         focusNode: FocusNode(),
+//         onKey: _handleKeyPress,
+//         child: SafeArea(
+//           child: Scaffold(
+//             appBar: AppBar(
+//               actions: [
+//                 IconButton(
+//                   onPressed: () {
+//                     Navigator.pop(context);
+//                   },
+//                   icon: Icon(Icons.save),
+//                 )
+//               ],
+//             ),
+//             body: Column(
+//               children: [
+//                 Padding(
+//                   padding: const EdgeInsets.all(25.0),
+//                   child: QuillToolbar.simple(
+//                     configurations: QuillSimpleToolbarConfigurations(
+//                       controller: _controller,
+//                       sharedConfigurations: const QuillSharedConfigurations(
+//                         locale: Locale('en'),
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//                 Expanded(
+//                   child: QuillEditor.basic(
+//                     configurations: QuillEditorConfigurations(
+//                       controller: _controller,
+//                       readOnly: false,
+//                       sharedConfigurations: const QuillSharedConfigurations(
+//                         locale: Locale('en'),
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//                 Container(
+//                   width: 200,
+//                   child: ElevatedButton(
+//                     style: ElevatedButton.styleFrom(
+//                       minimumSize: const Size.fromHeight(50),
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(20),
+//                       ),
+//                     ),
+//                     onPressed: () {},
+//                     child: const Text("Save"),
+//                   ),
+//                 ),
+//                 const SizedBox(height: 20),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//       ...cursorPositions.entries.map((entry) {
+//         final position = calculateCursorOffset(_controller as TextEditingController, entry.value);
+//         return RemoteCursorWidget(position: position, color: Colors.red); // Use a different color for each user
+//       }).toList(),
+//     ],
+//   );
+// }
+//}
