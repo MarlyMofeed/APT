@@ -26,15 +26,6 @@ class _FileManagementPageState extends State<FileManagementPage> {
 
   List<Document> ownedDocuments = [];
 
-  final List<Document> editorDocuments = [
-    Document(
-        id: "2", name: 'Document 2', owner: 'User 2', isOwnedByUser: false),
-  ];
-  final List<Document> viewerDocuments = [
-    Document(
-        id: "2", name: 'Document 2', owner: 'User 2', isOwnedByUser: false),
-  ];
-
   //FUNCTIONS//
   Future<void> createDocument(String userId, String documentName) async {
     final response = await http.post(
