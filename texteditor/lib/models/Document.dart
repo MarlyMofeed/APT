@@ -9,7 +9,6 @@ class Document {
     required this.name,
     required this.owner,
     this.isOwnedByUser = false,
-    //this.isEditor = true,
   });
 
   @override

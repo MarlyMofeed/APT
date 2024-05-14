@@ -22,8 +22,6 @@ class FileManagementPage extends StatefulWidget {
 class _FileManagementPageState extends State<FileManagementPage> {
   final Box _boxLogin = Hive.box("login");
 
-  bool isEditor = true;
-
   List<Document> ownedDocuments = [];
 
   //FUNCTIONS//
@@ -357,7 +355,7 @@ class _FileManagementPageState extends State<FileManagementPage> {
                   ),
                 ),
                 SizedBox(width: 50),
-                SharedDocuments(userId: widget.id, isEditor: isEditor),
+                SharedDocuments(userId: widget.id),
               ],
             ),
           ],
