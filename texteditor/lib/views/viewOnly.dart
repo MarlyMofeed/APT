@@ -11,19 +11,19 @@ import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
 
-class TextEdit extends StatefulWidget {
+class ViewOnly extends StatefulWidget {
   final String id;
 
-  const TextEdit({
+  const ViewOnly({
     Key? key,
     required this.id,
   }) : super(key: key);
 
   @override
-  _TextEditState createState() => _TextEditState();
+  _ViewOnlyState createState() => _ViewOnlyState();
 }
 
-class _TextEditState extends State<TextEdit> {
+class _ViewOnlyState extends State<ViewOnly> {
   QuillController _controller = QuillController.basic();
   late IO.Socket socket;
   late CRDT crdt;
@@ -119,16 +119,16 @@ class _TextEditState extends State<TextEdit> {
         body: Column(
           children: [
             Expanded(
-                child: QuillEditor.basic(
-                  configurations: QuillEditorConfigurations(
-                    controller: _controller,
-                    readOnly: true,
-                    sharedConfigurations: const QuillSharedConfigurations(
-                      locale: Locale('en'),
-                    ),
+              child: QuillEditor.basic(
+                configurations: QuillEditorConfigurations(
+                  controller: _controller,
+                  readOnly: true,
+                  sharedConfigurations: const QuillSharedConfigurations(
+                    locale: Locale('en'),
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
