@@ -193,8 +193,12 @@ public class DocumentController {
     }
 
     @PutMapping("/save")
-    public ResponseEntity<Map<String, Object>> saveDocument(@RequestHeader("userId") String userId,
-            @RequestBody Map<String, Object> body) {
+    // public ResponseEntity<Map<String, Object>>
+    // saveDocument(@RequestHeader("userId") String userId,
+    // @RequestBody Map<String, Object> body) {
+    public void saveDocument(String userId) {
+        System.out.println("ANA FEL Save document");
+
         // String documentId = body.get("id").toString();
         // Map<String, Object> response = new HashMap<>();
 
@@ -227,61 +231,66 @@ public class DocumentController {
         // return
         // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         // }
+        // String documentId = body.get("id").toString();
+        // Map<String, Object> response = new HashMap<>();
 
-        String documentId = body.get("id").toString();
-        Map<String, Object> response = new HashMap<>();
+        // // Find the user
+        // Optional<User> optionalUser = userRepository.findById(userId);
+        // if (optionalUser.isEmpty()) {
+        // response.put("message", "User not found");
+        // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        // }
+        // User user = optionalUser.get();
 
-        // Find the user
-        Optional<User> optionalUser = userRepository.findById(userId);
-        if (optionalUser.isEmpty()) {
-            response.put("message", "User not found");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
-        User user = optionalUser.get();
+        // // Find the document by ID and user ID
+        // Documents document = documentRepository.findByIdAndOwnerId(documentId,
+        // userId);
+        // if (document == null) {
+        // response.put("message", "Document not found");
+        // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        // }
 
-        // Find the document by ID and user ID
-        Documents document = documentRepository.findByIdAndOwnerId(documentId, userId);
-        if (document == null) {
-            response.put("message", "Document not found");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
+        // try {
+        // // Update the document's content
+        // // List<List<Character>> newContent = (List<List<Character>>)
+        // // body.get("documentContent");
+        // String documentContentString = (String) body.get("documentContent");
+        // System.out.println("Document content string: " + documentContentString);
+        // // print type of documentContentString
+        // System.out.println("Type of documentContentString: " +
+        // documentContentString.getClass().getName());
+        // List<List<Character>> newContent = new ArrayList<>();
+        // System.out.println("Type of new Content: " +
+        // newContent.getClass().getName());
+        // for (String word : documentContentString.split(" ")) {
+        // List<Character> wordChars = new ArrayList<>();
+        // for (char c : word.toCharArray()) {
+        // wordChars.add(c);
+        // }
+        // newContent.add(wordChars);
+        // System.out.println("Word: " + word);
+        // System.out.println("newContent: " + newContent);
+        // // print type of newContent
+        // System.out.println("Type of newContent: " + newContent.getClass().getName());
+        // }
 
-        try {
-            // Update the document's content
-            // List<List<Character>> newContent = (List<List<Character>>)
-            // body.get("documentContent");
-            String documentContentString = (String) body.get("documentContent");
-            System.out.println("Document content string: " + documentContentString);
-            // print type of documentContentString
-            System.out.println("Type of documentContentString: " + documentContentString.getClass().getName());
-            List<List<Character>> newContent = new ArrayList<>();
-            System.out.println("Type of new Content: " + newContent.getClass().getName());
-            for (String word : documentContentString.split(" ")) {
-                List<Character> wordChars = new ArrayList<>();
-                for (char c : word.toCharArray()) {
-                    wordChars.add(c);
-                }
-                newContent.add(wordChars);
-                System.out.println("Word: " + word);
-                System.out.println("newContent: " + newContent);
-                // print type of newContent
-                System.out.println("Type of newContent: " + newContent.getClass().getName());
-            }
+        // System.out.println("newContenttttt: " + newContent);
+        // System.out.println("Type of newContenttttt: " +
+        // newContent.getClass().getName());
 
-            System.out.println("newContenttttt: " + newContent);
-            System.out.println("Type of newContenttttt: " + newContent.getClass().getName());
+        // document.setContent(newContent);
+        // documentRepository.save(document);
 
-            document.setContent(newContent);
-            documentRepository.save(document);
+        // response.put("message", "Document content updated successfully");
+        // response.put("document", document);
 
-            response.put("message", "Document content updated successfully");
-            response.put("document", document);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("message", "Error updating document content: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        // return ResponseEntity.ok(response);
+        // } catch (Exception e) {
+        // response.put("message", "Error updating document content: " +
+        // e.getMessage());
+        // return
+        // ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        // }
     }
 
     @GetMapping("/user/owns")
@@ -350,7 +359,7 @@ public class DocumentController {
             Map<String, String> data = new HashMap<>();
             data.put("id", document.getId());
             data.put("name", document.getName());
-            data.put("ownerId", document.getOwnerId());	
+            data.put("ownerId", document.getOwnerId());
             editorDocumentData.add(data);
         }
 
@@ -359,7 +368,7 @@ public class DocumentController {
             Map<String, String> data = new HashMap<>();
             data.put("id", document.getId());
             data.put("name", document.getName());
-            data.put("ownerId", document.getOwnerId());	
+            data.put("ownerId", document.getOwnerId());
             viewerDocumentData.add(data);
         }
 

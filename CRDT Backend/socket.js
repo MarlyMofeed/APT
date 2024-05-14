@@ -3,8 +3,8 @@ const http = require("http");
 const express = require("express");
 const CRDT = require("./Data Structure/CRDTclass");
 const app = express();
-
 const server = http.createServer(app);
+const Document = require("./models/document");
 
 const io = new Server(server, {
   cors: {
@@ -23,8 +23,9 @@ const checkSpan = (struct) => {
   }
 };
 ////////////////////////////////////////////////////////////////////////////////
-const userSocketMap = {}; // {user_id: socketId}
+const userSocketMap = new Map(); // {user_id: socketId}
 const crdtMap = {}; // {document_id: crdt}
+// const documentMembersMap = {}; // {document_id: [user_id]}
 io.on("connection", async (socket) => {
   console.log("a user connected", socket.id);
   const user_id = socket.handshake.query.id;
@@ -34,7 +35,19 @@ io.on("connection", async (socket) => {
   if (!crdtMap[document_id]) {
     crdtMap[document_id] = new CRDT();
   }
-  userSocketMap[user_id] = socket.id;
+  // if (!documentMembersMap[document_id]) {
+  //   documentMembersMap[document_id] = 1;
+  // } else {
+  //   documentMembersMap[document_id]++;
+  // }
+  if (!userSocketMap.has(document_id)) {
+    userSocketMap.set(document_id, new Map());
+    userSocketMap.get(document_id).set(user_id, socket.id);
+  } else {
+    userSocketMap.get(document_id).set(user_id, socket.id);
+  }
+
+  // userSocketMap[user_id] = socket.id;
   console.log("User MAP", userSocketMap);
   console.log("CRDT MAP: ", crdtMap);
   socket.join(document_id);
@@ -69,15 +82,23 @@ io.on("connection", async (socket) => {
     }
     socket.in(document_id).emit("remoteDelete", character);
   });
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log("user disconnected", socket.id);
-    delete userSocketMap[user_id];
-    if (Object.keys(userSocketMap).length === 0) {
-      // userSocketMap is empty
-      console.log("userSocketMap is empty");
-    } else {
-      // userSocketMap is not empty
-      console.log("userSocketMap is not empty, Still some Users are Working");
+    // delete userSocketMap[user_id];
+    userSocketMap.get(document_id).delete(user_id);
+    //TODO: EL 7ETA DEH HATBOOOOZ
+
+    if (userSocketMap.get(document_id).size === 0) {
+      console.log("No users in the room");
+      let documentId = userSocketMap.get(user_id); // Get the document ID
+      const document = await Document.findById(document_id);
+      console.log("Document : ", document);
+      if (document) {
+        document.crdt = crdtMap[document_id];
+        await document.save();
+      } else {
+        console.log("Document not found");
+      }
     }
   });
 });
