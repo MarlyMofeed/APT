@@ -59,9 +59,10 @@ class CRDT {
     print(pos1?.digit);
     print(pos2?.digit);
     double newDigit = generateIdBetween(pos1?.digit ?? 0, pos2?.digit ?? 0);
-    if (struct.last.digit - newDigit <= 1) {
-      struct.last.digit += 200;
+    if (struct[struct.length - 1].digit - newDigit <= 1) {
+      struct[struct.length - 1].digit += 200;
     }
+    print("LAST DIGIT: ${struct.last.digit}");
     return Identifier(value, newDigit, siteId, bold, italic);
     // }
     // else if (pos2.digit - pos1.digit == 1) {
@@ -100,6 +101,9 @@ class CRDT {
   }
 
   Identifier remoteInsert(Identifier char) {
+    if (struct[struct.length - 1].digit - char.digit <= 1) {
+      struct[struct.length - 1].digit += 200;
+    }
     struct.add(char);
     struct.sort((a, b) => a.digit.compareTo(b.digit));
     return char;

@@ -17,7 +17,11 @@ const getReceiverSocketId = (receiverId) => {
   return userSocketMap[receiverId];
 };
 ////////////////////////////////////////////////////////////////////////////////
-
+const checkSpan = (struct) => {
+  if (struct[struct.length - 1].digit - struct[struct.length - 2].digit <= 1) {
+    struct[struct.length - 1].digit += 200;
+  }
+};
 ////////////////////////////////////////////////////////////////////////////////
 const userSocketMap = {}; // {user_id: socketId}
 const crdtMap = {}; // {document_id: crdt}
@@ -46,6 +50,7 @@ io.on("connection", async (socket) => {
         const digitB = parseInt(b.digit);
         return digitA - digitB;
       });
+      checkSpan(crdtMap[document_id].struct);
       console.log("Document CRDT: ", crdtMap[document_id]);
     }
     //TODO: LAW el document msh mawgood fel map

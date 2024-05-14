@@ -146,7 +146,7 @@ class _TextEditState extends State<TextEdit> {
     print("index gowa el handle remote insert: $index");
     String value = result.value;
     // Insert the character at the correct position in the text controller
-
+    print("CRDT After remote insert: ${crdt.struct}");
     // Apply formatting based on the isBold and isItalic flags
 
     if (char.bold == 1 && char.italic == 1) {
