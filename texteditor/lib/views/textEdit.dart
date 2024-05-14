@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,6 +47,10 @@ class _TextEditState extends State<TextEdit> {
     print("IN TEXT EDIT ID: ${widget.id}");
     print("documentId: $documentId ");
     crdt = CRDT();
+    // socket = IO.io('http://25.45.201.128:5000', <String, dynamic>{
+    //   'transports': ['websocket'],
+    //   'query': {'id': widget.id, 'documentId': documentId},
+    // });
     socket = IO.io('http://localhost:5000', <String, dynamic>{
       'transports': ['websocket'],
       'query': {'id': widget.id, 'documentId': documentId},
@@ -57,7 +59,11 @@ class _TextEditState extends State<TextEdit> {
     socket.on('connect', (_) {
       print('connected');
     });
-    socket.connect();
+    try {
+      socket.connect();
+    } catch (e) {
+      print("error: $e");
+    }
 
     _previousText = _controller.document.toPlainText();
     _autosaveTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
@@ -80,7 +86,15 @@ class _TextEditState extends State<TextEdit> {
       handleRemoteInsert(receivedChar);
     });
     socket.on('remoteDelete', (data) {
-      handleRemoteDelete(data);
+      print("galy REMOTE DELETE");
+      Identifier receivedChar = Identifier(
+        data['value'],
+        data['digit'].toDouble(),
+        data['siteId'],
+        data['bold'],
+        data['italic'],
+      );
+      handleRemoteDelete(receivedChar);
     });
   }
 
@@ -122,16 +136,17 @@ class _TextEditState extends State<TextEdit> {
   void handleLocalDelete(int index) {
     Identifier char = crdt.localDelete(index);
     print("HANDLE LOCAL DELETE: $char");
+    print("crdt.struct: ${crdt.struct}");
     socket.emit('localDelete', char);
   }
 
   void handleRemoteInsert(Identifier char) {
     Identifier result = crdt.remoteInsert(char);
     int index = crdt.findIndex(crdt.struct, result) - 1;
-    print("index: $index");
+    print("index gowa el handle remote insert: $index");
     String value = result.value;
     // Insert the character at the correct position in the text controller
-
+    print("CRDT After remote insert: ${crdt.struct}");
     // Apply formatting based on the isBold and isItalic flags
 
     if (char.bold == 1 && char.italic == 1) {
@@ -153,13 +168,14 @@ class _TextEditState extends State<TextEdit> {
     }
   }
 
-  void handleRemoteDelete(Map<String, dynamic> char) {
-    // int index = crdt.remoteDelete(char);
+  void handleRemoteDelete(Identifier char) {
+    int indexofRemoval = crdt.remoteDelete(char) - 1;
+    print("index of removal: $indexofRemoval");
     // Delete the character at the correct position in the text controller
-    // if (index != -1) {
-    //   _controller.replaceText(
-    //       index, 1, '', TextSelection.collapsed(offset: index));
-    // }
+    if (indexofRemoval != -1) {
+      _controller.replaceText(indexofRemoval, 1, '',
+          TextSelection.collapsed(offset: indexofRemoval));
+    }
   }
 
   // ignore: deprecated_member_use
@@ -173,10 +189,12 @@ class _TextEditState extends State<TextEdit> {
         // Handle backspace key press
         print("insideeee delete");
         operation = 'Delete';
-        int deleteIndex = _controller.selection.baseOffset - 1;
-        print("position: ${_controller.selection.baseOffset}");
+        int deleteIndex = _controller.selection.baseOffset;
+        print("deleteIndex: ${deleteIndex}");
         if (deleteIndex >= 0) {
           handleLocalDelete(deleteIndex);
+        } else {
+          print("Mafesh 7aga yabn el hbla");
         }
       } else if (keyLabel == "Caps Lock") {
         isCaps = 1 - isCaps;

@@ -16,7 +16,13 @@ const crdt = new CRDT();
 const getReceiverSocketId = (receiverId) => {
   return userSocketMap[receiverId];
 };
-
+////////////////////////////////////////////////////////////////////////////////
+const checkSpan = (struct) => {
+  if (struct[struct.length - 1].digit - struct[struct.length - 2].digit <= 1) {
+    struct[struct.length - 1].digit += 200;
+  }
+};
+////////////////////////////////////////////////////////////////////////////////
 const userSocketMap = {}; // {user_id: socketId}
 const crdtMap = {}; // {document_id: crdt}
 io.on("connection", async (socket) => {
@@ -36,14 +42,17 @@ io.on("connection", async (socket) => {
 
   socket.on("localInsert", (character) => {
     console.log("Received local insert operation: ", character);
-    // if (crdtMap[document_id]) {
-    //   crdtMap[document_id].push(character);
-    //   crdtMap[document_id].sort((a, b) => {
-    //     const digitA = parseInt(a.digit);
-    //     const digitB = parseInt(b.digit);
-    //     return digitA - digitB;
-    //   });
-    // }
+    if (crdtMap[document_id]) {
+      crdtMap[document_id].struct.push(character);
+      console.log("Document CRDT: ", crdtMap[document_id]);
+      crdtMap[document_id].struct.sort((a, b) => {
+        const digitA = parseInt(a.digit);
+        const digitB = parseInt(b.digit);
+        return digitA - digitB;
+      });
+      checkSpan(crdtMap[document_id].struct);
+      console.log("Document CRDT: ", crdtMap[document_id]);
+    }
     //TODO: LAW el document msh mawgood fel map
     // crdt.localInsert(character.value, character.);
     // socket.broadcast.emit("remoteInsert", character);
@@ -51,7 +60,14 @@ io.on("connection", async (socket) => {
   });
   socket.on("localDelete", (character) => {
     console.log("Received local delete operation: ", character);
-    socket.broadcast.emit("remoteDelete", character);
+    if (crdtMap[document_id]) {
+      const index = crdtMap[document_id].struct.findIndex(
+        (char) => char.digit === character.digit
+      );
+      crdtMap[document_id].struct.splice(index, 1);
+      console.log("Document CRDT After DELETE: ", crdtMap[document_id]);
+    }
+    socket.in(document_id).emit("remoteDelete", character);
   });
   socket.on("disconnect", () => {
     console.log("user disconnected", socket.id);
