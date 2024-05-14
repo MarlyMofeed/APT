@@ -9,8 +9,6 @@ import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
 
-// import 'package:uuid/uuid.dart';
-
 class TextEdit extends StatefulWidget {
   final String id;
   final String documentId;
@@ -34,7 +32,7 @@ class _TextEditState extends State<TextEdit> {
   int column = 0;
   String? element;
   Timer? _autosaveTimer;
-  String documentId = '6633ad108901bd48cf18bb60';
+  // String documentId = widget.documentId;
   List<String> content = ['your', 'document', 'content'];
   int version = 0;
   List<Map<String, int>> changesBuffer = [];
@@ -42,7 +40,7 @@ class _TextEditState extends State<TextEdit> {
   late CRDT crdt;
   int isCaps = 0;
   String previousCharacter = '';
-
+  String get documentId => widget.documentId;
   @override
   void initState() {
     super.initState();
@@ -51,6 +49,7 @@ class _TextEditState extends State<TextEdit> {
     //   'transports': ['websocket'],
     //   'query': {'id': widget.id, 'documentId': documentId},
     // });
+    print("ha5osh el document ely esmo: $documentId");
     socket = IO.io('http://localhost:5000', <String, dynamic>{
       'transports': ['websocket'],
       'query': {'id': widget.id, 'documentId': documentId},
