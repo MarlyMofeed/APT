@@ -22,7 +22,8 @@ public class User {
     private String password;
     private String email;
     private List<String> documentIds= new ArrayList<>();
-    private List<String> sharedDocumentIds=new ArrayList<>();
+    private List<String> editorDocumentIds=new ArrayList<>();
+    private List<String> viewerDocumentIds=new ArrayList<>();
     private String role;
 
     
@@ -65,18 +66,21 @@ public class User {
     public void setDocumentIds(List<String> documentIds) {
         this.documentIds = documentIds;
     }
-
-    public List<String> getSharedDocumentIds() {
-        return sharedDocumentIds;
+    public List<String> getEditorDocumentIds() {
+        return editorDocumentIds;
     }
-
-    public void setSharedDocumentIds(List<String> sharedDocumentIds) {
-        this.sharedDocumentIds = sharedDocumentIds;
+    public void setEditorDocumentIds(List<String> editorDocumentIds) {
+        this.editorDocumentIds = editorDocumentIds;
+    }
+    public List<String> getViewerDocumentIds() {
+        return viewerDocumentIds;
+    }
+    public void setViewerDocumentIds(List<String> viewerDocumentIds) {
+        this.viewerDocumentIds = viewerDocumentIds;
     }
     public String getRole() {
         return role;
     }
-
     public void setRole(String role) {
         this.role = role;
     }
