@@ -12,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+
 @Document
 @Data
 @NoArgsConstructor
@@ -29,8 +31,7 @@ public class Documents {
     private Map<String, Integer> editUserLatestVersion;
     private int bufferStartVersion;
     private List<Pair<String, Integer>> changesBuffer;
-    
-
+    private List<Identifier> identifiers;
     
     public Documents(String name, List<List<Character>> content, String ownerId, String sharedWith, int version) {
         this.name = name;
