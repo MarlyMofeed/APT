@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:texteditor/Components/shareDialog.dart';
 import 'package:texteditor/views/file_management.dart';
 
 class SharedDocuments extends StatefulWidget {
@@ -63,7 +64,14 @@ class _SharedDocumentsState extends State<SharedDocuments> {
                             ]
                           : [],
                       onSelected: (value) {
-                        // Handle selected option
+                        if (value == 'Share') {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return ShareDocumentDialog();
+                            },
+                          );
+                        }
                       },
                     ),
                   ),

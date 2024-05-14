@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:texteditor/Components/shareDialog.dart';
 import 'package:texteditor/Components/sharedDocument.dart';
 import 'package:texteditor/views/textEdit.dart';
 import 'package:http/http.dart' as http;
@@ -357,6 +358,14 @@ class _FileManagementPageState extends State<FileManagementPage> {
                                     if (value == 'Rename') {
                                       renameDocument(widget.id,
                                           ownedDocuments[index].name);
+                                    }
+                                    if (value == 'Share') {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return ShareDocumentDialog();
+                                        },
+                                      );
                                     }
                                   },
                                 ),
