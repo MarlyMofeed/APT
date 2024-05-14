@@ -39,8 +39,15 @@ io.on("connection", async (socket) => {
   const document_id = socket.handshake.query.documentId;
   console.log("ANA FL SOCKETS");
   console.log(user_id);
-  if (!crdtMap[document_id]) {
-    crdtMap[document_id] = new CRDT();
+  const documentToAdd = await Document.findById(document_id);
+  if (!crdtMap[documentToAdd._id]) {
+    if (documentToAdd.crdt) {
+      console.log("el document el da5el Document CRDT: ", documentToAdd.crdt);
+      crdtMap[documentToAdd._id] = documentToAdd.crdt;
+    } else {
+      crdtMap[documentToAdd._id] = new CRDT();
+    }
+  } else {
   }
   userDocumentMap.set(user_id, document_id);
   socketUser[socket.id] = user_id;
@@ -64,6 +71,9 @@ io.on("connection", async (socket) => {
   console.log("Socket User MAP", socketUser);
   console.log("CRDT MAP: ", crdtMap);
 
+  ////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////LOCAL Insert///////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
   socket.on("localInsert", (character) => {
     console.log("Received local insert operation: ", character);
     if (crdtMap[document_id]) {
@@ -82,6 +92,10 @@ io.on("connection", async (socket) => {
     // socket.broadcast.emit("remoteInsert", character);
     socket.in(document_id).emit("remoteInsert", character);
   });
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////LOCAL DELETE///////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
   socket.on("localDelete", (character) => {
     console.log("Received local delete operation: ", character);
     if (crdtMap[document_id]) {
@@ -93,6 +107,28 @@ io.on("connection", async (socket) => {
     }
     socket.in(document_id).emit("remoteDelete", character);
   });
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////LOCAL FORMAT///////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+  socket.on("localFormat", (character) => {
+    console.log("Received local insert operation: ", character);
+    if (crdtMap[document_id]) {
+      crdtMap[document_id].struct.push(character);
+      console.log("Document CRDT: ", crdtMap[document_id]);
+      crdtMap[document_id].struct.sort((a, b) => {
+        const digitA = parseInt(a.digit);
+        const digitB = parseInt(b.digit);
+        return digitA - digitB;
+      });
+      checkSpan(crdtMap[document_id].struct);
+      console.log("Document CRDT: ", crdtMap[document_id]);
+    }
+    //TODO: LAW el document msh mawgood fel map
+    // crdt.localInsert(character.value, character.);
+    // socket.broadcast.emit("remoteInsert", character);
+    socket.in(document_id).emit("remoteInsert", character);
+  });
   socket.on("disconnect", async () => {
     console.log("user disconnected", socket.id);
     // delete userSocketMap[user_id];
@@ -101,9 +137,22 @@ io.on("connection", async (socket) => {
     console.log(`User ${userId} disconnected from document ${documentId}`);
     userSocketMap.get(documentId).delete(userId);
     userDocumentMap.delete(userId);
+    //remove the respective entry from the socketUser map
+    delete socketUser[socket.id];
     if (userSocketMap.get(document_id).size === 0) {
       console.log("No users in the room");
       userSocketMap.delete(document_id);
+      const document = await Document.findById(document_id);
+      console.log("Document : ", document);
+      if (document) {
+        console.log("Dah ely ha7oto: ", crdtMap[document_id]);
+        document.crdt = crdtMap[document_id].struct;
+        await document.save();
+        delete crdtMap[document_id];
+        // crdtMap.delete(document_id);
+      } else {
+        console.log("Document not found");
+      }
     }
 
     //remove the respective entry from the socketUser map
