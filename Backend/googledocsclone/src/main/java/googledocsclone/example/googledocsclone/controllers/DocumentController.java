@@ -352,14 +352,18 @@ public class DocumentController {
         List<Map<String, String>> editorDocumentData = new ArrayList<>();
         for (Documents document : editorDocuments) {
             Map<String, String> data = new HashMap<>();
+            data.put("id", document.getId());
             data.put("name", document.getName());
+            data.put("ownerId", document.getOwnerId());	
             editorDocumentData.add(data);
         }
 
         List<Map<String, String>> viewerDocumentData = new ArrayList<>();
         for (Documents document : viewerDocuments) {
             Map<String, String> data = new HashMap<>();
+            data.put("id", document.getId());
             data.put("name", document.getName());
+            data.put("ownerId", document.getOwnerId());	
             viewerDocumentData.add(data);
         }
 
