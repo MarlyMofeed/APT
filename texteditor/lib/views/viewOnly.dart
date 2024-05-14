@@ -123,6 +123,7 @@ class _ViewOnlyState extends State<ViewOnly> {
                 configurations: QuillEditorConfigurations(
                   controller: _controller,
                   readOnly: true,
+                  showCursor: false,
                   sharedConfigurations: const QuillSharedConfigurations(
                     locale: Locale('en'),
                   ),
