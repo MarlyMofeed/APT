@@ -327,7 +327,6 @@ public class DocumentController {
     public ResponseEntity<Map<String, Object>> getSharedDocuments(@RequestHeader("userId") String userId) {
         Map<String, Object> response = new HashMap<>();
 
-        // Find the user
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
             response.put("message", "User not found");
@@ -335,7 +334,6 @@ public class DocumentController {
         }
         User user = optionalUser.get();
 
-        // Get the user's shared document IDs
         List<String> editorDocumentIds = user.getEditorDocumentIds();
         List<String> viewerDocumentIds = user.getViewerDocumentIds();
         if ((editorDocumentIds == null || editorDocumentIds.isEmpty())
@@ -344,22 +342,24 @@ public class DocumentController {
             return ResponseEntity.ok(response);
         }
 
-        // Retrieve the shared documents from the repository
         List<Documents> editorDocuments = documentRepository.findAllById(editorDocumentIds);
         List<Documents> viewerDocuments = documentRepository.findAllById(viewerDocumentIds);
 
-        // Prepare the response
         List<Map<String, String>> editorDocumentData = new ArrayList<>();
         for (Documents document : editorDocuments) {
             Map<String, String> data = new HashMap<>();
+            data.put("id", document.getId());
             data.put("name", document.getName());
+            data.put("ownerId", document.getOwnerId());	
             editorDocumentData.add(data);
         }
 
         List<Map<String, String>> viewerDocumentData = new ArrayList<>();
         for (Documents document : viewerDocuments) {
             Map<String, String> data = new HashMap<>();
+            data.put("id", document.getId());
             data.put("name", document.getName());
+            data.put("ownerId", document.getOwnerId());	
             viewerDocumentData.add(data);
         }
 
