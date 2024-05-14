@@ -235,25 +235,27 @@ class _TextEditState extends State<TextEdit> {
   void handleRemoteFormatting(Identifier identifiers) {
     // for (int i = 0; i < identifiers.length; i++) {
     Identifier char = identifiers;
-    int index = crdt.findIndex(crdt.struct, char) - 1;
+    print(char.digit);
+    int index = crdt.findIndexByPosition(char) - 1;
+    print("index gowa el handle remote formatting: $index");
+    crdt.struct[index + 1]=char;
     if (index != -1) {
       if (char.bold == 1 && char.italic == 1) {
-        _controller.replaceText(index, 0, char.value,
-            TextSelection.collapsed(offset: index + char.value.length));
         _controller.formatText(index, char.value.length, Attribute.bold);
         _controller.formatText(index, char.value.length, Attribute.italic);
       } else if (char.bold == 1) {
-        _controller.replaceText(index, 0, char.value,
-            TextSelection.collapsed(offset: index + char.value.length));
         _controller.formatText(index, char.value.length, Attribute.bold);
+        _controller.formatText(index, char.value.length, Attribute.clone(Attribute.italic, null));
+
       } else if (char.italic == 1) {
-        _controller.replaceText(index, 0, char.value,
-            TextSelection.collapsed(offset: index + char.value.length));
         _controller.formatText(index, char.value.length, Attribute.italic);
+        _controller.formatText(index, char.value.length, Attribute.clone(Attribute.bold, null));
+        
+
       } else {
-        _controller.replaceText(index, 0, char.value,
-            TextSelection.collapsed(offset: index + char.value.length));
-      }
+       _controller.formatText(index, char.value.length, Attribute.clone(Attribute.bold, null));
+        _controller.formatText(index, char.value.length, Attribute.clone(Attribute.italic, null));
+      } 
     }
     // }
   }
