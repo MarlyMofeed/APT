@@ -76,6 +76,22 @@ io.on("connect", async (socket) => {
   // console.log("Socket User MAP", socketUser);
   console.log("CRDT MAP: ", crdtMap);
 
+
+
+
+  socket.on('getDocumentContent', (documentId) => {
+    // Get the CRDT content for the document
+    const crdtContent = crdtMap.get(documentId).struct;
+
+    console.log('Document content requested: ', crdtContent);
+  
+    // Emit an event back to the client with the CRDT content
+    socket.emit('documentContent', crdtContent);
+  });
+
+
+
+
   ////////////////////////////////////////////////////////////////////////////////
   /////////////////////////LOCAL Insert///////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
