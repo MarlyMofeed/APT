@@ -6,10 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:texteditor/Components/remoteCursor.dart';
 import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
+import 'package:dart_quill_delta/dart_quill_delta.dart' as quill_delta;
 import 'package:dart_quill_delta/dart_quill_delta.dart' as quill_delta;
 
 class TextEdit extends StatefulWidget {
@@ -224,25 +226,10 @@ class _TextEditState extends State<TextEdit> {
     });
   }
 
-<<<<<<< HEAD
-  void initializeSocket() {
-    print("ha5osh el document ely esmo: ${widget.documentId}");
-    socket = IO.io('http://localhost:5000', <String, dynamic>{
-      'transports': ['websocket'],
-      'query': {'id': widget.id, 'documentId': widget.documentId},
-    });
-    socket.connect();
-    // socket.connect();
-    // socket.emit('connect', {'id': widget.id, 'documentId': widget.documentId});
-    // socket.on('connect', (_) {
-    //   print("gowa el connect: ${widget.documentId}");
-    // });
-    // print("connected");
-    // print("Connected: ${widget.documentId}");
-=======
   @override
   void dispose() {
     print("ana ba despoooozzzzzz");
+    crdt.struct.clear();
     crdt.struct.clear();
     socket.disconnect();
     // _autosaveTimer?.cancel();
