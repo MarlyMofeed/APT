@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:texteditor/Components/remoteCursor.dart';
 import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
+import 'package:dart_quill_delta/dart_quill_delta.dart' as quill_delta;
 
 class TextEdit extends StatefulWidget {
   final String id;
@@ -46,24 +48,39 @@ class _TextEditState extends State<TextEdit> {
   int previousEnd = 0;
   int currentStart = 0;
   int currentEnd = 0;
+  late quill.Document _document;
 
   // Add a map to store the cursor positions of all users in the document (siteId -> cursor position)
   // holds userIDs and their cursor positions
   Map<String, int> cursorPositions = {};
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   socket = IO.io('http://localhost:5000', <String, dynamic>{
+  //     'transports': ['websocket'],
+  //     'query': {'id': widget.id, 'documentId': widget.documentId},
+  //   });
+  //   socket.connect();
+  //   // socket.on('connect', (_) {
+  //   //   print("gowa el connect: ${widget.documentId}");
+  //   //   print('connected');
+  //   // });
+  //   // socket.connect();
+  // }
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    socket = IO.io('http://localhost:5000', <String, dynamic>{
-      'transports': ['websocket'],
-      'query': {'id': widget.id, 'documentId': widget.documentId},
-    });
-    socket.connect();
-    // socket.on('connect', (_) {
-    //   print("gowa el connect: ${widget.documentId}");
-    //   print('connected');
-    // });
-    // socket.connect();
+  void dispose() {
+    print("ana ba despoooozzzzzz");
+    socket.disconnect();
+    // widget.documentId = "";
+    // _autosaveTimer?.cancel();
+    super.dispose();
   }
+
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   initializeSocket();
+  // }
 
   @override
   void initState() {
@@ -73,25 +90,47 @@ class _TextEditState extends State<TextEdit> {
     crdt = CRDT();
     // socket = IO.io('http://25.45.201.128:5000', <String, dynamic>{
     //   'transports': ['websocket'],
-    //   'query': {'id': widget.id, 'documentId': documentId},
-    // });
-    // print("ha5osh el document ely esmo: ${widget.documentId}");
-    // socket = IO.io('http://localhost:5000', <String, dynamic>{
-    //   'transports': ['websocket'],
+<<<<<<< HEAD
     //   'query': {'id': widget.id, 'documentId': widget.documentId},
     // });
-    // socket.connect();
+    // initializeSocket();
+
+    print("ha5osh el document ely esmo: ${widget.documentId}");
+    socket = IO.io('http://localhost:5000', <String, dynamic>{
+      'transports': ['websocket'],
+      'query': {'id': widget.id, 'documentId': widget.documentId},
+      'autoConnect': false,
+    });
+    print("el doc abl el connect: ${widget.documentId}");
+
+    socket.connect();
+    print("el doc b3d el connect: ${widget.documentId}");
     // socket.on('connect', (_) {
     //   // socket.connect();
     //   print("gowa el connect: ${widget.documentId}");
-
-    //   print('connected');
+=======
+    //   'query': {'id': widget.id, 'documentId': documentId},
     // });
-    // try {
-    //   socket.connect();
-    // } catch (e) {
-    //   print("error: $e");
-    // }
+    // print("ha5osh el document ely esmo: ${widget.documentId}");
+    socket = IO.io('http://localhost:5000', <String, dynamic>{
+      'transports': ['websocket'],
+      'query': {'id': widget.id, 'documentId': widget.documentId},
+    });
+    socket.connect();
+    socket.on('connect', (_) {
+      // socket.connect();
+      print("gowa el connect: ${widget.documentId}");
+>>>>>>> 7e6e1f67868965210332a08a191f0f65ee737c55
+
+      print('connected');
+    });
+    try {
+      socket.connect();
+    } catch (e) {
+      print("error: $e");
+    }
+
+    //getDocumentContent(widget.documentId);
 
     // Add a listener to the text controller to track cursor position changes
     // _controller.addListener(() {
@@ -152,26 +191,73 @@ class _TextEditState extends State<TextEdit> {
       print("galy REMOTE FORMATTING");
       List<Identifier> receivedChars = [];
       for (int i = 0; i < data.length; i++) {
-      Identifier receivedChar = Identifier(
-        data[i]['value'],
-        data[i]['digit'].toDouble(),
-        data[i]['siteId'],
-        data[i]['bold'],
-        data[i]['italic'],
-      );
-      receivedChars.add(receivedChar);
+        Identifier receivedChar = Identifier(
+          data[i]['value'],
+          data[i]['digit'].toDouble(),
+          data[i]['siteId'],
+          data[i]['bold'],
+          data[i]['italic'],
+        );
+        receivedChars.add(receivedChar);
       }
       handleRemoteFormatting(receivedChars);
     });
+
+    socket.on('receiveDocument', (data) {
+      // Handle the received data as a list
+      List<dynamic> crdtContent = data;
+      List<Identifier> crdtContentList = [];
+      for (int i = 0; i < crdtContent.length; i++) {
+        Identifier char = Identifier(
+          crdtContent[i]['value'],
+          crdtContent[i]['digit'].toDouble(),
+          crdtContent[i]['siteId'],
+          crdtContent[i]['bold'],
+          crdtContent[i]['italic'],
+        );
+        crdtContentList.add(char);
+      }
+      crdt.struct = crdtContentList;
+      print(crdtContentList);
+      // Handle the received CRDT content
+      handleReceivedCrdtContent(crdtContentList);
+    });
   }
 
+<<<<<<< HEAD
+  void initializeSocket() {
+    print("ha5osh el document ely esmo: ${widget.documentId}");
+    socket = IO.io('http://localhost:5000', <String, dynamic>{
+      'transports': ['websocket'],
+      'query': {'id': widget.id, 'documentId': widget.documentId},
+    });
+    socket.connect();
+    // socket.connect();
+    // socket.emit('connect', {'id': widget.id, 'documentId': widget.documentId});
+    // socket.on('connect', (_) {
+    //   print("gowa el connect: ${widget.documentId}");
+    // });
+    // print("connected");
+    // print("Connected: ${widget.documentId}");
+=======
   @override
   void dispose() {
     print("ana ba despoooozzzzzz");
+    crdt.struct.clear();
     socket.disconnect();
     // _autosaveTimer?.cancel();
     super.dispose();
+>>>>>>> 7e6e1f67868965210332a08a191f0f65ee737c55
   }
+
+  // void getDocumentContent(String documentId) {
+  //   print(
+  //       "ANA GOWA GETDOCUMENT CONTENT =============================================================================");
+  //   // Emit an event to the server requesting the document content
+  //   //_controller.document.delete(0, _controller.document.length - 1);
+  //   //crdt.struct = [];
+  //   //socket.emit('getDocumentContent', documentId);
+  // }
 
   void _saveDocument(String userId, String documentId, String content) async {
     var url = Uri.parse('http://localhost:8080/document/save');
@@ -199,6 +285,93 @@ class _TextEditState extends State<TextEdit> {
     Identifier char = crdt.localInsert(value, index, bold, italic);
     print("HANDLE LOCAL INSERT: $char");
     socket.emit('localInsert', char);
+  }
+
+  // void handleReceivedCrdtContent(List<dynamic> crdtContent) {
+  //   print(
+  //       "galy DOCUMENT CONTENT =============================================================================");
+  //   //print(crdtContent);
+  //   List<Map<String, dynamic>> contentArray = [];
+  //   for (var item in crdtContent.skip(1).take(crdtContent.length - 2)) {
+  //     contentArray.add({
+  //       'char': item.value,
+  //       'bold': item.bold,
+  //       'italic': item.italic,
+  //     });
+  //   }
+  //   contentArray.add({'char': '\n', 'bold': 0, 'italic': 0});
+
+  //   print(contentArray);
+
+  //   // Create a Delta from the array
+  //   var delta = quill_delta.Delta();
+  //   for (var item in contentArray) {
+  //     var attributes = <String, dynamic>{};
+  //     if (item['bold'] == 1) {
+  //       attributes['bold'] = true;
+  //     }
+  //     if (item['italic'] == 1) {
+  //       attributes['italic'] = true;
+  //     }
+  //     delta.insert(item['char'], attributes);
+  //   }
+
+  //   print(delta.toJson());
+
+  //   // Create a Document from the Delta
+  //   _document = quill.Document.fromDelta(delta);
+  //   // Initialize the QuillController with the Document
+  //   print(_document.toDelta().toJson());
+  //   _controller = quill.QuillController(
+  //     document: _document,
+  //     selection: const TextSelection.collapsed(offset: 0),
+  //   );
+
+  //   print(_controller.document.toDelta().toJson());
+  // }
+
+  void handleReceivedCrdtContent(List<dynamic> crdtContent) {
+    print(
+        "Received DOCUMENT CONTENT =============================================================================");
+
+    // Creating the content array
+    List<Map<String, dynamic>> contentArray = crdtContent.map((item) {
+      return {
+        'char': item.value,
+        'bold': item.bold,
+        'italic': item.italic,
+      };
+    }).toList();
+
+    // Adding a newline character at the end
+    contentArray.add({'char': '\n', 'bold': 0, 'italic': 0});
+
+    print(contentArray);
+
+    // Creating a Delta from the content array
+    var delta = quill_delta.Delta();
+    for (var item in contentArray) {
+      var attributes = <String, dynamic>{};
+      if (item['bold'] == 1) {
+        attributes['bold'] = true;
+      }
+      if (item['italic'] == 1) {
+        attributes['italic'] = true;
+      }
+      delta.insert(item['char'], attributes);
+    }
+
+    // Creating a Document from the Delta
+    _document = quill.Document.fromDelta(delta);
+
+    // Initializing the QuillController with the Document
+    _controller = quill.QuillController(
+      document: _document,
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+
+    // Rebuild the UI with the new controller
+    setState(() {});
   }
 
   void handleLocalDelete(int index) {
@@ -254,31 +427,31 @@ class _TextEditState extends State<TextEdit> {
 
   void handleRemoteFormatting(List<Identifier> identifiers) {
     for (int i = 0; i < identifiers.length; i++) {
-    Identifier char = identifiers[i];
-    print(char.digit);
-    int index = crdt.findIndexByPosition(char) - 1;
-    print("index gowa el handle remote formatting: $index");
-    crdt.struct[index + 1] = char;
-    if (index != -1) {
-      if (char.bold == 1 && char.italic == 1) {
-        _controller.formatText(index, char.value.length, Attribute.bold);
-        _controller.formatText(index, char.value.length, Attribute.italic);
-      } else if (char.bold == 1) {
-        _controller.formatText(index, char.value.length, Attribute.bold);
-        _controller.formatText(
-            index, char.value.length, Attribute.clone(Attribute.italic, null));
-      } else if (char.italic == 1) {
-        _controller.formatText(index, char.value.length, Attribute.italic);
-        _controller.formatText(
-            index, char.value.length, Attribute.clone(Attribute.bold, null));
-      } else {
-        _controller.formatText(
-            index, char.value.length, Attribute.clone(Attribute.bold, null));
-        _controller.formatText(
-            index, char.value.length, Attribute.clone(Attribute.italic, null));
+      Identifier char = identifiers[i];
+      print(char.digit);
+      int index = crdt.findIndexByPosition(char) - 1;
+      print("index gowa el handle remote formatting: $index");
+      crdt.struct[index + 1] = char;
+      if (index != -1) {
+        if (char.bold == 1 && char.italic == 1) {
+          _controller.formatText(index, char.value.length, Attribute.bold);
+          _controller.formatText(index, char.value.length, Attribute.italic);
+        } else if (char.bold == 1) {
+          _controller.formatText(index, char.value.length, Attribute.bold);
+          _controller.formatText(index, char.value.length,
+              Attribute.clone(Attribute.italic, null));
+        } else if (char.italic == 1) {
+          _controller.formatText(index, char.value.length, Attribute.italic);
+          _controller.formatText(
+              index, char.value.length, Attribute.clone(Attribute.bold, null));
+        } else {
+          _controller.formatText(
+              index, char.value.length, Attribute.clone(Attribute.bold, null));
+          _controller.formatText(index, char.value.length,
+              Attribute.clone(Attribute.italic, null));
+        }
       }
     }
-   }
   }
 
   // ignore: deprecated_member_use
@@ -346,11 +519,10 @@ class _TextEditState extends State<TextEdit> {
         }
       }
       print(identifiers);
-      
-      socket.emit('localFormatting',{
+
+      socket.emit('localFormatting', {
         'identifiers': identifiers //.map((e) => e.toJson()).toList(),
       });
-      
     }
   }
 
@@ -424,8 +596,8 @@ class _TextEditState extends State<TextEdit> {
                 child: QuillEditor.basic(
                   configurations: QuillEditorConfigurations(
                     controller: _controller,
-                    showCursor: true,
-                    readOnly: false,
+                    //showCursor: true,
+                    //readOnly: false,
                     sharedConfigurations: const QuillSharedConfigurations(
                       locale: Locale('en'),
                     ),
