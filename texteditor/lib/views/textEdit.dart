@@ -57,6 +57,7 @@ class _TextEditState extends State<TextEdit> {
       'transports': ['websocket'],
       'query': {'id': widget.id, 'documentId': widget.documentId},
     });
+    socket.connect();
     // socket.on('connect', (_) {
     //   print("gowa el connect: ${widget.documentId}");
     //   print('connected');
@@ -74,23 +75,23 @@ class _TextEditState extends State<TextEdit> {
     //   'transports': ['websocket'],
     //   'query': {'id': widget.id, 'documentId': documentId},
     // });
-    print("ha5osh el document ely esmo: ${widget.documentId}");
-    socket = IO.io('http://localhost:5000', <String, dynamic>{
-      'transports': ['websocket'],
-      'query': {'id': widget.id, 'documentId': widget.documentId},
-    });
+    // print("ha5osh el document ely esmo: ${widget.documentId}");
+    // socket = IO.io('http://localhost:5000', <String, dynamic>{
+    //   'transports': ['websocket'],
+    //   'query': {'id': widget.id, 'documentId': widget.documentId},
+    // });
+    // socket.connect();
+    // socket.on('connect', (_) {
+    //   // socket.connect();
+    //   print("gowa el connect: ${widget.documentId}");
 
-    socket.on('connect', (_) {
-      // socket.connect();
-      print("gowa el connect: ${widget.documentId}");
-
-      print('connected');
-    });
-    try {
-      socket.connect();
-    } catch (e) {
-      print("error: $e");
-    }
+    //   print('connected');
+    // });
+    // try {
+    //   socket.connect();
+    // } catch (e) {
+    //   print("error: $e");
+    // }
 
     // Add a listener to the text controller to track cursor position changes
     // _controller.addListener(() {
