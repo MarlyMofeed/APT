@@ -50,6 +50,19 @@ class _TextEditState extends State<TextEdit> {
   // Add a map to store the cursor positions of all users in the document (siteId -> cursor position)
   // holds userIDs and their cursor positions
   Map<String, int> cursorPositions = {};
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    socket = IO.io('http://localhost:5000', <String, dynamic>{
+      'transports': ['websocket'],
+      'query': {'id': widget.id, 'documentId': widget.documentId},
+    });
+    // socket.on('connect', (_) {
+    //   print("gowa el connect: ${widget.documentId}");
+    //   print('connected');
+    // });
+    // socket.connect();
+  }
 
   @override
   void initState() {
@@ -68,6 +81,9 @@ class _TextEditState extends State<TextEdit> {
     });
 
     socket.on('connect', (_) {
+      // socket.connect();
+      print("gowa el connect: ${widget.documentId}");
+
       print('connected');
     });
     try {
@@ -101,7 +117,10 @@ class _TextEditState extends State<TextEdit> {
     _autosaveTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
       _saveDocument(widget.id, widget.documentId, _previousText);
     });
-    socket.on('disconnect', (_) => print('disconnected'));
+    socket.on('disconnect', (_) {
+      print('disconnected');
+      print("gowa el disconnect: ${widget.documentId}");
+    });
     socket.on('error', (data) => print('error: $data'));
 
     socket.on('remoteInsert', (data) {
@@ -149,7 +168,7 @@ class _TextEditState extends State<TextEdit> {
   void dispose() {
     print("ana ba despoooozzzzzz");
     socket.disconnect();
-    _autosaveTimer?.cancel();
+    // _autosaveTimer?.cancel();
     super.dispose();
   }
 
@@ -238,24 +257,25 @@ class _TextEditState extends State<TextEdit> {
     print(char.digit);
     int index = crdt.findIndexByPosition(char) - 1;
     print("index gowa el handle remote formatting: $index");
-    crdt.struct[index + 1]=char;
+    crdt.struct[index + 1] = char;
     if (index != -1) {
       if (char.bold == 1 && char.italic == 1) {
         _controller.formatText(index, char.value.length, Attribute.bold);
         _controller.formatText(index, char.value.length, Attribute.italic);
       } else if (char.bold == 1) {
         _controller.formatText(index, char.value.length, Attribute.bold);
-        _controller.formatText(index, char.value.length, Attribute.clone(Attribute.italic, null));
-
+        _controller.formatText(
+            index, char.value.length, Attribute.clone(Attribute.italic, null));
       } else if (char.italic == 1) {
         _controller.formatText(index, char.value.length, Attribute.italic);
-        _controller.formatText(index, char.value.length, Attribute.clone(Attribute.bold, null));
-        
-
+        _controller.formatText(
+            index, char.value.length, Attribute.clone(Attribute.bold, null));
       } else {
-       _controller.formatText(index, char.value.length, Attribute.clone(Attribute.bold, null));
-        _controller.formatText(index, char.value.length, Attribute.clone(Attribute.italic, null));
-      } 
+        _controller.formatText(
+            index, char.value.length, Attribute.clone(Attribute.bold, null));
+        _controller.formatText(
+            index, char.value.length, Attribute.clone(Attribute.italic, null));
+      }
     }
     // }
   }
