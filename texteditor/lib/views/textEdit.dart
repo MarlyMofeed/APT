@@ -51,7 +51,7 @@ class _TextEditState extends State<TextEdit> {
   int currentStart = 0;
   int currentEnd = 0;
   late quill.Document _document;
-
+  late var docId;
   // Add a map to store the cursor positions of all users in the document (siteId -> cursor position)
   // holds userIDs and their cursor positions
   Map<String, int> cursorPositions = {};
@@ -69,14 +69,6 @@ class _TextEditState extends State<TextEdit> {
   //   // });
   //   // socket.connect();
   // }
-  @override
-  void dispose() {
-    print("ana ba despoooozzzzzz");
-    socket.disconnect();
-    // widget.documentId = "";
-    // _autosaveTimer?.cancel();
-    super.dispose();
-  }
 
   // @override
   // void didChangeDependencies() {
@@ -92,45 +84,43 @@ class _TextEditState extends State<TextEdit> {
     crdt = CRDT();
     // socket = IO.io('http://25.45.201.128:5000', <String, dynamic>{
     //   'transports': ['websocket'],
-<<<<<<< HEAD
     //   'query': {'id': widget.id, 'documentId': widget.documentId},
     // });
     // initializeSocket();
 
     print("ha5osh el document ely esmo: ${widget.documentId}");
+    docId = widget.documentId;
     socket = IO.io('http://localhost:5000', <String, dynamic>{
       'transports': ['websocket'],
-      'query': {'id': widget.id, 'documentId': widget.documentId},
+      'query': {'id': widget.id, 'documentId': docId},
       'autoConnect': false,
     });
-    print("el doc abl el connect: ${widget.documentId}");
+    print("el doc abl el connect: ${docId}");
 
     socket.connect();
-    print("el doc b3d el connect: ${widget.documentId}");
+    print("el doc b3d el connect: ${docId}");
     // socket.on('connect', (_) {
     //   // socket.connect();
     //   print("gowa el connect: ${widget.documentId}");
-=======
     //   'query': {'id': widget.id, 'documentId': documentId},
     // });
     // print("ha5osh el document ely esmo: ${widget.documentId}");
-    socket = IO.io('http://localhost:5000', <String, dynamic>{
-      'transports': ['websocket'],
-      'query': {'id': widget.id, 'documentId': widget.documentId},
-    });
-    socket.connect();
-    socket.on('connect', (_) {
-      // socket.connect();
-      print("gowa el connect: ${widget.documentId}");
->>>>>>> 7e6e1f67868965210332a08a191f0f65ee737c55
+    // socket = IO.io('http://localhost:5000', <String, dynamic>{
+    //   'transports': ['websocket'],
+    //   'query': {'id': widget.id, 'documentId': widget.documentId},
+    // });
+    // //socket.connect();
+    // socket.on('connect', (_) {
+    //   // socket.connect();
+    //   print("gowa el connect fel text editor: ${widget.documentId}");
 
-      print('connected');
-    });
-    try {
-      socket.connect();
-    } catch (e) {
-      print("error: $e");
-    }
+    //   print('connected');
+    // });
+    // try {
+    //   socket.connect();
+    // } catch (e) {
+    //   print("error: $e");
+    // }
 
     //getDocumentContent(widget.documentId);
 
@@ -161,7 +151,7 @@ class _TextEditState extends State<TextEdit> {
     });
     socket.on('disconnect', (_) {
       print('disconnected');
-      print("gowa el disconnect: ${widget.documentId}");
+      print("gowa el disconnect: ${docId}");
     });
     socket.on('error', (data) => print('error: $data'));
 
@@ -220,6 +210,7 @@ class _TextEditState extends State<TextEdit> {
         crdtContentList.add(char);
       }
       crdt.struct = crdtContentList;
+      _controller.moveCursorToEnd();
       print(crdtContentList);
       // Handle the received CRDT content
       handleReceivedCrdtContent(crdtContentList);
@@ -230,11 +221,10 @@ class _TextEditState extends State<TextEdit> {
   void dispose() {
     print("ana ba despoooozzzzzz");
     crdt.struct.clear();
-    crdt.struct.clear();
     socket.disconnect();
+    docId = null;
     // _autosaveTimer?.cancel();
     super.dispose();
->>>>>>> 7e6e1f67868965210332a08a191f0f65ee737c55
   }
 
   // void getDocumentContent(String documentId) {
@@ -271,6 +261,7 @@ class _TextEditState extends State<TextEdit> {
   void handleLocalInsert(String value, int index, int bold, int italic) {
     Identifier char = crdt.localInsert(value, index, bold, italic);
     print("HANDLE LOCAL INSERT: $char");
+    print("Index printed: $index");
     socket.emit('localInsert', char);
   }
 
@@ -345,11 +336,19 @@ class _TextEditState extends State<TextEdit> {
       if (item['italic'] == 1) {
         attributes['italic'] = true;
       }
-      delta.insert(item['char'], attributes);
+
+      // Create a new delta for each character
+      var charDelta = quill_delta.Delta();
+      charDelta.insert(item['char'], attributes);
+
+      // Add the new delta to the existing delta
+      delta = delta.concat(charDelta);
     }
 
     // Creating a Document from the Delta
     _document = quill.Document.fromDelta(delta);
+    print("ddeltaaaa");
+    print(delta);
 
     // Initializing the QuillController with the Document
     _controller = quill.QuillController(
@@ -358,7 +357,9 @@ class _TextEditState extends State<TextEdit> {
     );
 
     // Rebuild the UI with the new controller
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void handleLocalDelete(int index) {

@@ -185,6 +185,7 @@ io.on("connection", async (socket) => {
       // console.log("Document : ", document);
       if (document) {
         // console.log("Dah ely ha7oto: ", crdtMap.get(document_id));
+        console.log(crdtMap.get(document_id))
         document.crdt = crdtMap.get(document_id).struct;
         await document.save();
         crdtMap.delete(document_id);
