@@ -149,18 +149,18 @@ class _TextEditState extends State<TextEdit> {
     });
     socket.on('remoteFormatting', (data) {
       print("galy REMOTE FORMATTING");
-      // List<Identifier> receivedChars = [];
-      // for (int i = 0; i < data.length; i++) {
+      List<Identifier> receivedChars = [];
+      for (int i = 0; i < data.length; i++) {
       Identifier receivedChar = Identifier(
-        data['value'],
-        data['digit'].toDouble(),
-        data['siteId'],
-        data['bold'],
-        data['italic'],
+        data[i]['value'],
+        data[i]['digit'].toDouble(),
+        data[i]['siteId'],
+        data[i]['bold'],
+        data[i]['italic'],
       );
-      // receivedChars.add(receivedChar);
-      // }
-      handleRemoteFormatting(receivedChar);
+      receivedChars.add(receivedChar);
+      }
+      handleRemoteFormatting(receivedChars);
     });
   }
 
@@ -251,9 +251,9 @@ class _TextEditState extends State<TextEdit> {
     //     .updateAll((key, value) => value >= indexofRemoval ? value - 1 : value);
   }
 
-  void handleRemoteFormatting(Identifier identifiers) {
-    // for (int i = 0; i < identifiers.length; i++) {
-    Identifier char = identifiers;
+  void handleRemoteFormatting(List<Identifier> identifiers) {
+    for (int i = 0; i < identifiers.length; i++) {
+    Identifier char = identifiers[i];
     print(char.digit);
     int index = crdt.findIndexByPosition(char) - 1;
     print("index gowa el handle remote formatting: $index");
@@ -277,7 +277,7 @@ class _TextEditState extends State<TextEdit> {
             index, char.value.length, Attribute.clone(Attribute.italic, null));
       }
     }
-    // }
+   }
   }
 
   // ignore: deprecated_member_use
@@ -345,9 +345,11 @@ class _TextEditState extends State<TextEdit> {
         }
       }
       print(identifiers);
-      for (int i = 0; i < identifiers.length; i++) {
-        socket.emit('localFormatting', identifiers[i]);
-      }
+      
+      socket.emit('localFormatting',{
+        'identifiers': identifiers //.map((e) => e.toJson()).toList(),
+      });
+      
     }
   }
 
