@@ -135,8 +135,10 @@ public class DocumentController {
         User user = optionalUser.get();
 
         Documents document = documentRepository.findByName(documentName);
-        if (document == null || !document.getOwnerId().equals(userId)) {
-            response.put("message", "Document not found or you are not the owner");
+        if (document == null ||
+                (!user.getEditorDocumentIds().contains(document.getId()) &&
+                        !user.getViewerDocumentIds().contains(document.getId()))) {
+            response.put("message", "Document not found or you do not have access");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 

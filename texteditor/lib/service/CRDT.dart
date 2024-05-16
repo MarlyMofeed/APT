@@ -37,6 +37,9 @@ class CRDT {
   Identifier generateChar(String val, int index, int bold, int italic) {
     print("ANA HENAAA");
     print("INDEX: $index");
+    print(struct);
+    print(struct[index]);
+    print(struct[index + 1]);
     Identifier? posBefore = index == 0 ? struct[0] : struct[index];
     Identifier? posAfter = index == 0 ? struct[1] : struct[index + 1];
     print("POS BEFORE: $posBefore");

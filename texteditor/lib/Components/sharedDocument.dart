@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:texteditor/views/textEdit.dart';
 import 'package:texteditor/views/viewOnly.dart';
 
+enum DocumentType { editor, viewer }
+
 class SharedDocuments extends StatefulWidget {
   final String userId;
 
@@ -39,6 +41,103 @@ class _SharedDocumentsState extends State<SharedDocuments> {
     } else {
       throw Exception('Failed to load shared documents');
     }
+  }
+
+  Future<void> updateDocumentName(String userId, String oldName, String newName,
+      DocumentType docType) async {
+    print('Updating document name' + oldName + newName + docType.toString());
+    var url = 'http://localhost:8080/document/update';
+    var headers = {
+      'Content-Type': 'application/json',
+      'userId': userId,
+    };
+    var body = jsonEncode({
+      'documentName': oldName,
+      'newDocumentName': newName,
+    });
+
+    var response = await http.put(Uri.parse(url), headers: headers, body: body);
+    print('Response Body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      print('Document updated successfully');
+      setState(() {
+        Document updatedDocument;
+        if (docType == DocumentType.editor) {
+          updatedDocument = editorDocuments.firstWhere(
+            (doc) => doc.name == oldName,
+          );
+        } else {
+          updatedDocument = viewerDocuments.firstWhere(
+            (doc) => doc.name == oldName,
+          );
+        }
+        updatedDocument.name = newName;
+      });
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to update the document name'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void renameDocument(String userId, String oldName, DocumentType docType) {
+    print('Renaming document' + oldName + docType.toString());
+    final TextEditingController _controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Rename Document'),
+          content: TextField(
+            controller: _controller,
+            decoration: InputDecoration(
+              hintText: "New Document Name",
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Done'),
+              onPressed: () async {
+                String newName = _controller.text.trim();
+                if (newName.isNotEmpty) {
+                  print("ha call rename document ");
+                  await updateDocumentName(userId, oldName, newName, docType);
+                  Navigator.of(context).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Please enter a new document name'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void loadSharedDocuments() async {
@@ -115,6 +214,8 @@ class _SharedDocumentsState extends State<SharedDocuments> {
                           ),
                         );
                       } else if (viewerDocuments.contains(document)) {
+                        print('Viewing document');
+                        print(document.id);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -159,6 +260,14 @@ class _SharedDocumentsState extends State<SharedDocuments> {
                               );
                             },
                           );
+                        }
+                        if (value == 'Rename') {
+                          renameDocument(
+                              widget.userId,
+                              document.name,
+                              editorDocuments.contains(document)
+                                  ? DocumentType.editor
+                                  : DocumentType.viewer);
                         }
                       },
                     ),

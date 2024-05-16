@@ -6,12 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:texteditor/Components/remoteCursor.dart';
 import 'package:texteditor/service/CRDT.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:http/http.dart' as http;
-import 'package:dart_quill_delta/dart_quill_delta.dart' as quill_delta;
 import 'package:dart_quill_delta/dart_quill_delta.dart' as quill_delta;
 
 class TextEdit extends StatefulWidget {
@@ -51,7 +49,7 @@ class _TextEditState extends State<TextEdit> {
   int currentStart = 0;
   int currentEnd = 0;
   late quill.Document _document;
-  late var docId;
+  // late var docId;
   // Add a map to store the cursor positions of all users in the document (siteId -> cursor position)
   // holds userIDs and their cursor positions
   Map<String, int> cursorPositions = {};
@@ -70,11 +68,12 @@ class _TextEditState extends State<TextEdit> {
   //   // socket.connect();
   // }
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   initializeSocket();
-  // }
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print("ana gowa el did change dependencies=================");
+    _controller.addListener(_handleSelectionChange);
+  }
 
   @override
   void initState() {
@@ -89,16 +88,20 @@ class _TextEditState extends State<TextEdit> {
     // initializeSocket();
 
     print("ha5osh el document ely esmo: ${widget.documentId}");
-    docId = widget.documentId;
     socket = IO.io('http://localhost:5000', <String, dynamic>{
       'transports': ['websocket'],
-      'query': {'id': widget.id, 'documentId': docId},
-      'autoConnect': false,
+      'query': {'id': widget.id, 'documentId': widget.documentId},
     });
-    print("el doc abl el connect: ${docId}");
-
-    socket.connect();
-    print("el doc b3d el connect: ${docId}");
+    socket.on('connect', (_) {
+      // socket.connect();
+      print("gowa el connect: ${widget.documentId}");
+      print('connected');
+    });
+    try {
+      socket.connect();
+    } catch (e) {
+      print("error: $e");
+    }
     // socket.on('connect', (_) {
     //   // socket.connect();
     //   print("gowa el connect: ${widget.documentId}");
@@ -151,7 +154,7 @@ class _TextEditState extends State<TextEdit> {
     });
     socket.on('disconnect', (_) {
       print('disconnected');
-      print("gowa el disconnect: ${docId}");
+      // print("gowa el disconnect: ${docId}");
     });
     socket.on('error', (data) => print('error: $data'));
 
@@ -210,10 +213,12 @@ class _TextEditState extends State<TextEdit> {
         crdtContentList.add(char);
       }
       crdt.struct = crdtContentList;
-      _controller.moveCursorToEnd();
+      // _controller.moveCursorToEnd();
       print(crdtContentList);
       // Handle the received CRDT content
-      handleReceivedCrdtContent(crdtContentList);
+
+      handleReceivedCrdtContent(
+          crdtContentList.sublist(1, crdtContentList.length - 1));
     });
   }
 
@@ -221,8 +226,9 @@ class _TextEditState extends State<TextEdit> {
   void dispose() {
     print("ana ba despoooozzzzzz");
     crdt.struct.clear();
+    _controller.removeListener(_handleSelectionChange);
     socket.disconnect();
-    docId = null;
+    // docId = null;
     // _autosaveTimer?.cancel();
     super.dispose();
   }
@@ -328,7 +334,9 @@ class _TextEditState extends State<TextEdit> {
 
     // Creating a Delta from the content array
     var delta = quill_delta.Delta();
-    for (var item in contentArray) {
+    // for (var item in contentArray) {
+    for (int i = 0; i < contentArray.length; i++) {
+      var item = contentArray[i];
       var attributes = <String, dynamic>{};
       if (item['bold'] == 1) {
         attributes['bold'] = true;
@@ -344,17 +352,16 @@ class _TextEditState extends State<TextEdit> {
       // Add the new delta to the existing delta
       delta = delta.concat(charDelta);
     }
-
     // Creating a Document from the Delta
-    _document = quill.Document.fromDelta(delta);
+    _controller.document = quill.Document.fromDelta(delta);
     print("ddeltaaaa");
     print(delta);
 
     // Initializing the QuillController with the Document
-    _controller = quill.QuillController(
-      document: _document,
-      selection: const TextSelection.collapsed(offset: 0),
-    );
+    // _controller = quill.QuillController(
+    //   document: _document,
+    //   selection: const TextSelection.collapsed(offset: 0),
+    // );
 
     // Rebuild the UI with the new controller
     if (mounted) {
@@ -457,11 +464,14 @@ class _TextEditState extends State<TextEdit> {
         print("deleteIndex: ${deleteIndex}");
         if (deleteIndex >= 0) {
           handleLocalDelete(deleteIndex);
-        } else {
-          print("Mafesh 7aga yabn el hbla");
-        }
+        } else {}
       } else if (keyLabel == "Caps Lock") {
         isCaps = 1 - isCaps;
+      } else if (keyLabel == "Enter") {
+        // Handle enter key press
+        operation = 'Insert';
+        handleLocalInsert('\n', _controller.selection.baseOffset,
+            _isBoldSelected(), _isItalicSelected());
       } else {
         print("insideeee insert");
         if (keyLabel.length > 1) {
@@ -515,6 +525,7 @@ class _TextEditState extends State<TextEdit> {
   }
 
   void _handleSelectionChange() {
+    print("ana fl selection change");
     if (_controller.selection.isValid) {
       previousStart = currentStart;
       previousEnd = currentEnd;

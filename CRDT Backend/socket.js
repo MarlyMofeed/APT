@@ -63,7 +63,6 @@ io.on("connection", async (socket) => {
       crdtMap.set(document_id, crdt);
     }
   }
-  console.log("Document CRDT 5ARA: ", crdtMap);
   console.log("Document CRDT: ", crdtMap.get(document_id));
   console.log("Sending Document to User");
   socket.emit("receiveDocument", crdtMap.get(document_id).struct);
@@ -76,21 +75,15 @@ io.on("connection", async (socket) => {
   // console.log("Socket User MAP", socketUser);
   console.log("CRDT MAP: ", crdtMap);
 
-
-
-
-  socket.on('getDocumentContent', (documentId) => {
+  socket.on("getDocumentContent", (documentId) => {
     // Get the CRDT content for the document
     const crdtContent = crdtMap.get(documentId).struct;
 
-    console.log('Document content requested: ', crdtContent);
-  
+    console.log("Document content requested: ", crdtContent);
+
     // Emit an event back to the client with the CRDT content
-    socket.emit('documentContent', crdtContent);
+    socket.emit("documentContent", crdtContent);
   });
-
-
-
 
   ////////////////////////////////////////////////////////////////////////////////
   /////////////////////////LOCAL Insert///////////////////////////////////////////
@@ -98,9 +91,9 @@ io.on("connection", async (socket) => {
   socket.on("localInsert", (character) => {
     console.log("Received local insert operation: ", character);
     if (crdtMap.get(document_id)) {
-      console.log("bada5al fi dah: ", crdtMap.get(document_id));
+      // console.log("bada5al fi dah: ", crdtMap.get(document_id));
       crdtMap.get(document_id).struct.push(character);
-      console.log("Document CRDT: ", crdtMap.get(document_id));
+      // console.log("Document CRDT: ", crdtMap.get(document_id));
       crdtMap.get(document_id).struct.sort((a, b) => {
         const digitA = parseInt(a.digit);
         const digitB = parseInt(b.digit);
@@ -178,17 +171,17 @@ io.on("connection", async (socket) => {
     //remove the respective entry from the socketUser map
     // delete socketUser[socket.id];
     let room = io.sockets.adapter.rooms[document_id];
-    if (!room || room.length === 0) {
+    if (!room || room.size === 0) {
       console.log("No users in the room");
       // userSocketMap.delete(document_id);
       const document = await Document.findById(document_id);
       // console.log("Document : ", document);
       if (document) {
         // console.log("Dah ely ha7oto: ", crdtMap.get(document_id));
-        console.log(crdtMap.get(document_id))
+        console.log(crdtMap.get(document_id));
         document.crdt = crdtMap.get(document_id).struct;
         await document.save();
-        crdtMap.delete(document_id);
+        // crdtMap.delete(document_id);
       } else {
         console.log("Document not found");
       }
