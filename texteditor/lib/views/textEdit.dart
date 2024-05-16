@@ -88,7 +88,7 @@ class _TextEditState extends State<TextEdit> {
     // initializeSocket();
 
     print("ha5osh el document ely esmo: ${widget.documentId}");
-    socket = IO.io('http://localhost:5000', <String, dynamic>{
+    socket = IO.io('http://25.45.201.128:5000', <String, dynamic>{
       'transports': ['websocket'],
       'query': {'id': widget.id, 'documentId': widget.documentId},
     });

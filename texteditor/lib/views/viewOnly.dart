@@ -32,7 +32,7 @@ class _ViewOnlyState extends State<ViewOnly> {
     super.initState();
 
     crdt = CRDT();
-    socket = IO.io('http://localhost:5000', <String, dynamic>{
+    socket = IO.io('http://25.45.201.128:5000', <String, dynamic>{
       'transports': ['websocket'],
       'query': {'id': widget.id, 'documentId': widget.documentId},
     });
@@ -140,15 +140,15 @@ class _ViewOnlyState extends State<ViewOnly> {
       delta = delta.concat(charDelta);
     }
     // Creating a Document from the Delta
-    _document = quill.Document.fromDelta(delta);
+    _controller.document = quill.Document.fromDelta(delta);
     print("ddeltaaaa");
     print(delta);
 
     // Initializing the QuillController with the Document
-    _controller = QuillController(
-      document: _document,
-      selection: const TextSelection.collapsed(offset: 0),
-    );
+    // _controller = QuillController(
+    //   document: _document,
+    //   selection: const TextSelection.collapsed(offset: 0),
+    // );
 
     // Rebuild the UI with the new controller
     if (mounted) {
